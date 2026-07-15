@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pilotaction — Du chaos Excel au pilotage clair | Synappli</title>
+<meta name="description" content="Découvrez comment Pilotaction transforme le chaos des tableurs Excel en un pilotage fiable, traçable et collaboratif. Une présentation Synappli." />
+<style>
+  /* =========================================================
+     PILOTACTION × SYNAPPLI — Présentation animée
+     Page autonome : aucune dépendance externe.
+     ========================================================= */
+
+  /* ---------- Design tokens ---------- */
+  :root {
+    --bg:        #080A12;
+    --bg-2:      #0C0F1C;
+    --surface:   #121624;
+    --panel:     #131829;
+    --panel-2:   #1A2036;
+    --line:      #262C44;
+    --text:      #EAECF6;
+    --muted:     #9AA1BC;
+    --faint:     #5A6180;
+
+    --brand-1:   #6366F1;  /* indigo */
+    --brand-2:   #22D3EE;  /* cyan   */
+    --brand-3:   #A855F7;  /* violet */
+    --brand-grad: linear-gradient(115deg, #818CF8 0%, #6366F1 35%, #22D3EE 100%);
+
+    --ok:        #34D399;
+    --warn:      #FBBF24;
+    --bad:       #F43F5E;
+
+    --excel:     #107C41;  /* Excel green */
+    --excel-dk:  #0B5A2F;
+
+    --radius:    18px;
+    --radius-sm: 12px;
+    --shadow:    0 30px 80px -30px rgba(0,0,0,.75);
+    --maxw:      1160px;
+
+    --ff: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    --fmono: "SFMono-Regular", ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+  body {
+    font-family: var(--ff);
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.5;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Ambient gradient field */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background:
+      radial-gradient(60% 50% at 15% 0%, rgba(99,102,241,.20), transparent 60%),
+      radial-gradient(55% 45% at 100% 20%, rgba(34,211,238,.14), transparent 55%),
+      radial-gradient(50% 50% at 80% 100%, rgba(168,85,247,.14), transparent 60%),
+      var(--bg);
+    pointer-events: none;
+  }
+
+  .wrap { position: relative; z-index: 1; }
+  .container { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+
+  a { color: inherit; text-decoration: none; }
+
+  /* ---------- Scroll progress scrubber ---------- */
+  .scrubber {
+    position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+    background: var(--brand-grad);
+    z-index: 100;
+    box-shadow: 0 0 14px rgba(99,102,241,.7);
+    transition: width .1s linear;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 90;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px;
+    backdrop-filter: blur(10px);
+    background: linear-gradient(to bottom, rgba(8,10,18,.72), rgba(8,10,18,0));
+    transition: background .3s ease;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: -.01em; }
+  .brand .logo {
+    width: 30px; height: 30px; border-radius: 9px;
+    background: var(--brand-grad);
+    display: grid; place-items: center;
+    box-shadow: 0 6px 20px -6px rgba(99,102,241,.8);
+  }
+  .brand .logo svg { width: 17px; height: 17px; display: block; }
+  .brand small { color: var(--muted); font-weight: 500; }
+  .brand .sep { color: var(--line); font-weight: 400; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 9px;
+    font: inherit; font-weight: 600; font-size: 14px;
+    padding: 11px 18px; border-radius: 999px;
+    border: 1px solid transparent; cursor: pointer;
+    transition: transform .18s ease, box-shadow .25s ease, background .25s ease, border-color .25s;
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: var(--brand-grad); color: #0A0B14; font-weight: 700;
+    box-shadow: 0 12px 30px -10px rgba(99,102,241,.75);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 18px 40px -12px rgba(99,102,241,.9); }
+  .btn-ghost { background: rgba(255,255,255,.04); color: var(--text); border-color: var(--line); }
+  .btn-ghost:hover { background: rgba(255,255,255,.09); transform: translateY(-2px); }
+  .btn svg { width: 15px; height: 15px; }
+
+  /* ---------- Section scaffolding ---------- */
+  section { position: relative; padding: 120px 0; }
+  .kicker {
+    display: inline-flex; align-items: center; gap: 9px;
+    font-size: 12.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--brand-2);
+    padding: 7px 14px; border-radius: 999px;
+    border: 1px solid rgba(34,211,238,.25);
+    background: rgba(34,211,238,.06);
+  }
+  .kicker.rose { color: #FDA4AF; border-color: rgba(244,63,94,.3); background: rgba(244,63,94,.07); }
+  h1, h2 { letter-spacing: -.03em; line-height: 1.04; font-weight: 800; }
+  h1 { font-size: clamp(38px, 6.4vw, 76px); }
+  h2 { font-size: clamp(30px, 4.6vw, 52px); }
+  .lead { color: var(--muted); font-size: clamp(17px, 2vw, 21px); max-width: 620px; }
+  .grad-text {
+    background: var(--brand-grad);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+
+  /* Reveal-on-scroll */
+  .reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+  .reveal.d1 { transition-delay: .08s; }
+  .reveal.d2 { transition-delay: .16s; }
+  .reveal.d3 { transition-delay: .24s; }
+  .reveal.d4 { transition-delay: .32s; }
+  .reveal.d5 { transition-delay: .40s; }
+
+  /* =========================================================
+     HERO
+     ========================================================= */
+  .hero { min-height: 100vh; display: flex; align-items: center; padding-top: 90px; }
+  .hero h1 { max-width: 14ch; }
+  .hero .lead { margin-top: 26px; }
+  .hero-actions { margin-top: 40px; display: flex; gap: 14px; flex-wrap: wrap; }
+  .hero-meta { margin-top: 46px; display: flex; gap: 30px; flex-wrap: wrap; color: var(--muted); font-size: 14px; }
+  .hero-meta b { color: var(--text); font-size: 26px; font-weight: 800; display: block; letter-spacing: -.02em; }
+  .scroll-hint {
+    position: absolute; bottom: 34px; left: 50%; transform: translateX(-50%);
+    color: var(--muted); font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .scroll-hint .chev { width: 22px; height: 22px; animation: bob 1.8s ease-in-out infinite; }
+  @keyframes bob { 0%,100%{ transform: translateY(0); opacity:.5 } 50%{ transform: translateY(7px); opacity:1 } }
+
+  /* =========================================================
+     EXCEL — "le monde d'avant"
+     ========================================================= */
+  .split { display: grid; grid-template-columns: 1.05fr .95fr; gap: 56px; align-items: center; }
+
+  /* Fake spreadsheet window */
+  .window {
+    border-radius: var(--radius); overflow: hidden;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--line);
+    transform: perspective(1600px) rotateY(6deg) rotateX(2deg);
+    transition: transform .8s cubic-bezier(.2,.7,.2,1);
+  }
+  .split.in .window { transform: perspective(1600px) rotateY(0) rotateX(0); }
+  .win-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 11px 14px; background: #E7E9EE; border-bottom: 1px solid #cfd3dc;
+  }
+  .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .dot.r{ background:#FF5F57 } .dot.y{ background:#FEBC2E } .dot.g{ background:#28C840 }
+  .win-file {
+    margin-left: 12px; font-size: 12px; color: #5c6270; font-family: var(--fmono);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 74%;
+  }
+  .xl { background: #fff; color: #1f2430; }
+  .xl-ribbon { display: flex; align-items: center; gap: 0; background: var(--excel); height: 30px; }
+  .xl-ribbon .tab { color: #eafff2; font-size: 11.5px; padding: 0 14px; height: 100%; display: flex; align-items: center; font-weight: 600; }
+  .xl-ribbon .tab.active { background: #fff; color: var(--excel-dk); }
+  .grid { display: grid; grid-template-columns: 34px repeat(6, 1fr); font-size: 12px; font-family: var(--fmono); }
+  .grid .c {
+    border-right: 1px solid #E6E8EC; border-bottom: 1px solid #E6E8EC;
+    padding: 6px 8px; min-height: 28px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    background: #fff; color: #2a2f3a;
+  }
+  .grid .head { background: #F3F4F7; color: #7b818e; text-align: center; font-weight: 700; }
+  .grid .rownum { background: #F3F4F7; color: #7b818e; text-align: center; font-weight: 700; }
+  .grid .err { background: #FDECEE; color: var(--bad); font-weight: 700; }
+  .grid .warn { background: #FEF6E7; color: #B45309; }
+  .grid .strike { text-decoration: line-through; color: #b9bdc7; }
+  .grid .flash { animation: cellflash 2.6s ease-in-out infinite; }
+  @keyframes cellflash {
+    0%, 55%, 100% { background: #fff; color: #2a2f3a; }
+    62%, 92% { background: #FDECEE; color: var(--bad); }
+  }
+  .grid .ghostrow { animation: ghostdelete 4.5s ease-in-out infinite; }
+  @keyframes ghostdelete {
+    0%, 40% { opacity: 1; }
+    55%, 75% { opacity: .12; transform: translateX(6px); }
+    90%, 100% { opacity: 1; transform: none; }
+  }
+
+  /* pain points */
+  .pains { display: flex; flex-direction: column; gap: 14px; }
+  .pain {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 16px 18px; border-radius: var(--radius-sm);
+    background: rgba(244,63,94,.05); border: 1px solid rgba(244,63,94,.16);
+  }
+  .pain .x {
+    flex: 0 0 auto; width: 26px; height: 26px; border-radius: 8px;
+    display: grid; place-items: center; background: rgba(244,63,94,.15); color: #FDA4AF;
+  }
+  .pain .x svg { width: 15px; height: 15px; }
+  .pain b { display: block; font-size: 15.5px; margin-bottom: 2px; }
+  .pain span { color: var(--muted); font-size: 14px; }
+
+  /* floating error toasts over the window */
+  .win-shell { position: relative; }
+  .toast {
+    position: absolute; z-index: 5;
+    background: #16192A; border: 1px solid var(--line);
+    padding: 9px 13px; border-radius: 10px; font-size: 12.5px; font-weight: 600;
+    box-shadow: 0 16px 40px -14px rgba(0,0,0,.7);
+    display: flex; align-items: center; gap: 8px;
+    opacity: 0; transform: translateY(8px) scale(.96);
+  }
+  .split.in .toast { animation: pop .6s forwards; }
+  .split.in .toast.t1 { animation-delay: .7s; }
+  .split.in .toast.t2 { animation-delay: 1.05s; }
+  .split.in .toast.t3 { animation-delay: 1.4s; }
+  @keyframes pop { to { opacity: 1; transform: none; } }
+  .toast .pip { width: 8px; height: 8px; border-radius: 50%; background: var(--bad); box-shadow: 0 0 10px var(--bad); }
+  .toast.t1 { top: -14px; right: -18px; }
+  .toast.t2 { bottom: 60px; left: -26px; }
+  .toast.t3 { bottom: -16px; right: 28px; }
+
+  /* =========================================================
+     TRANSITION band
+     ========================================================= */
+  .band { text-align: center; padding: 120px 0; }
+  .band h2 { max-width: 18ch; margin: 0 auto; }
+  .band .em { color: var(--brand-2); }
+
+  /* =========================================================
+     PILOTACTION app scene
+     ========================================================= */
+  .app {
+    border-radius: var(--radius); overflow: hidden;
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, #0F1424, #0C1120);
+    box-shadow: var(--shadow);
+  }
+  .app-top {
+    display: flex; align-items: center; gap: 14px;
+    padding: 13px 16px; border-bottom: 1px solid var(--line);
+    background: rgba(255,255,255,.02);
+  }
+  .app-search {
+    flex: 1; height: 30px; border-radius: 8px; background: #0A0E1A; border: 1px solid var(--line);
+    display: flex; align-items: center; padding: 0 11px; color: var(--muted); font-size: 12.5px; gap: 8px;
+  }
+  .avatars { display: flex; }
+  .avatars span {
+    width: 26px; height: 26px; border-radius: 50%; margin-left: -7px;
+    border: 2px solid #0F1424; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #0A0B14;
+  }
+  .live { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ok); font-weight: 600; }
+  .live .dot-live { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 8px var(--ok); animation: pulse 1.6s infinite; }
+  @keyframes pulse { 0%,100%{ opacity:1 } 50%{ opacity:.35 } }
+
+  .app-body { display: grid; grid-template-columns: 170px 1fr; min-height: 400px; }
+  .app-side { border-right: 1px solid var(--line); padding: 14px 10px; display: flex; flex-direction: column; gap: 3px; }
+  .nav-i { display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 9px; font-size: 13px; color: var(--muted); font-weight: 500; }
+  .nav-i.active { background: rgba(99,102,241,.14); color: var(--text); font-weight: 600; }
+  .nav-i .ic { width: 15px; height: 15px; opacity: .85; }
+  .app-main { padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px; }
+  .kpi .lab { font-size: 11.5px; color: var(--muted); font-weight: 600; letter-spacing: .02em; }
+  .kpi .val { font-size: 27px; font-weight: 800; letter-spacing: -.02em; margin-top: 6px; }
+  .kpi .val.up { color: var(--ok); } .kpi .val.br { color: var(--brand-2); }
+  .kpi .bar { height: 5px; border-radius: 3px; background: #0A0E1A; margin-top: 10px; overflow: hidden; }
+  .kpi .bar i { display: block; height: 100%; width: 0; border-radius: 3px; background: var(--brand-grad); transition: width 1.3s cubic-bezier(.2,.7,.2,1); }
+  .app.in .kpi .bar i { width: var(--w, 70%); }
+
+  .ptable { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; }
+  .ptable .th, .ptable .tr { display: grid; grid-template-columns: 1.6fr 1fr .9fr 34px; gap: 8px; align-items: center; padding: 11px 14px; font-size: 13px; }
+  .ptable .th { color: var(--muted); font-weight: 600; font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; border-bottom: 1px solid var(--line); }
+  .ptable .tr { border-top: 1px solid rgba(38,44,68,.6); }
+  .ptable .tr.fresh { animation: slidein .7s cubic-bezier(.2,.7,.2,1); }
+  @keyframes slidein { from { opacity: 0; transform: translateY(-10px); background: rgba(99,102,241,.14); } to { opacity: 1; } }
+  .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+  .pill.ok { background: rgba(52,211,153,.14); color: var(--ok); }
+  .pill.run { background: rgba(99,102,241,.16); color: #A5B4FC; }
+  .pill.late { background: rgba(251,191,36,.14); color: var(--warn); }
+  .who { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 10.5px; font-weight: 700; color: #0A0B14; }
+
+  .benefits { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .ben { display: flex; gap: 13px; align-items: flex-start; padding: 15px 16px; border-radius: var(--radius-sm); background: rgba(255,255,255,.025); border: 1px solid var(--line); }
+  .ben .v { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; background: rgba(52,211,153,.15); color: var(--ok); }
+  .ben .v svg { width: 15px; height: 15px; }
+  .ben b { display: block; font-size: 15px; margin-bottom: 2px; }
+  .ben span { color: var(--muted); font-size: 13.5px; }
+
+  /* activity log (floating) */
+  .log-toast {
+    position: absolute; right: -18px; bottom: 44px; z-index: 6; width: 250px;
+    background: #10162A; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+    box-shadow: 0 20px 50px -18px rgba(0,0,0,.8);
+    opacity: 0; transform: translateX(20px);
+  }
+  .app.in .log-toast { animation: pop .6s .9s forwards; }
+  .log-toast .lt-h { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 700; margin-bottom: 9px; }
+  .log-row { display: flex; gap: 9px; font-size: 12px; padding: 5px 0; color: var(--muted); }
+  .log-row b { color: var(--text); font-weight: 600; }
+  .log-row .tk { color: var(--brand-2); }
+
+  /* =========================================================
+     COMPARISON table
+     ========================================================= */
+  .compare { max-width: 980px; margin: 0 auto; }
+  .ctable { margin-top: 44px; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--panel); }
+  .crow { display: grid; grid-template-columns: 1.2fr 1fr 1fr; }
+  .crow > div { padding: 18px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 11px; font-size: 14.5px; }
+  .crow.head > div { font-weight: 700; font-size: 14px; letter-spacing: .01em; }
+  .crow.head .c-excel { color: #FDA4AF; }
+  .crow.head .c-pa { color: var(--brand-2); }
+  .crow:last-child > div { border-bottom: none; }
+  .crit { color: var(--text); font-weight: 600; }
+  .c-excel { background: rgba(244,63,94,.035); color: var(--muted); }
+  .c-pa { background: rgba(34,211,238,.04); color: var(--text); }
+  .mk { flex: 0 0 auto; width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center; }
+  .mk.bad { background: rgba(244,63,94,.16); color: #FDA4AF; }
+  .mk.ok  { background: rgba(52,211,153,.16); color: var(--ok); }
+  .mk svg { width: 12px; height: 12px; }
+  .crow .head-cell { justify-content: flex-start; }
+
+  /* =========================================================
+     CTA + footer
+     ========================================================= */
+  .cta-wrap { padding: 40px 0 120px; }
+  .cta {
+    position: relative; overflow: hidden;
+    border-radius: 28px; padding: 66px 40px; text-align: center;
+    background:
+      radial-gradient(80% 120% at 50% 0%, rgba(99,102,241,.35), transparent 60%),
+      linear-gradient(180deg, #141A30, #0E1220);
+    background-color: #10152A;
+    border: 1px solid var(--line);
+  }
+  .cta::after {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(60% 80% at 80% 100%, rgba(34,211,238,.22), transparent 60%);
+    pointer-events: none;
+  }
+  .cta h2 { position: relative; max-width: 16ch; margin: 0 auto 18px; }
+  .cta p { position: relative; color: var(--muted); max-width: 44ch; margin: 0 auto 34px; font-size: 18px; }
+  .cta .hero-actions { position: relative; justify-content: center; }
+
+  footer { border-top: 1px solid var(--line); padding: 40px 0; color: var(--muted); font-size: 13.5px; }
+  .foot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  .foot .brand { color: var(--text); }
+
+  /* Auto-demo indicator */
+  .demo-flag {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px);
+    z-index: 95; background: #12172A; border: 1px solid var(--line);
+    padding: 10px 18px; border-radius: 999px; font-size: 13px; font-weight: 600;
+    box-shadow: var(--shadow); display: flex; align-items: center; gap: 12px;
+    opacity: 0; pointer-events: none; transition: opacity .3s, transform .3s;
+  }
+  .demo-flag.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+  .demo-flag .stop { color: var(--muted); cursor: pointer; border-left: 1px solid var(--line); padding-left: 12px; }
+  .demo-flag .stop:hover { color: var(--text); }
+
+  /* =========================================================
+     Responsive
+     ========================================================= */
+  @media (max-width: 900px) {
+    section { padding: 84px 0; }
+    .split { grid-template-columns: 1fr; gap: 40px; }
+    .window { transform: none !important; }
+    .benefits { grid-template-columns: 1fr; }
+    .app-body { grid-template-columns: 1fr; }
+    .app-side { flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--line); }
+    .nav-i span { display: none; }
+    .log-toast { position: static; width: auto; margin-top: 6px; opacity: 1; transform: none; }
+    .app.in .log-toast { animation: none; }
+    .toast { position: static; display: inline-flex; margin: 6px 6px 0 0; opacity: 1; transform: none; animation: none !important; }
+    .win-shell { display: flex; flex-direction: column; }
+    .crow { grid-template-columns: 1fr; }
+    .crow > div { border-bottom: 1px solid var(--line); }
+    .crow.head { display: none; }
+    .c-excel::before { content: "Excel — "; color: #FDA4AF; font-weight: 700; }
+    .c-pa::before { content: "Pilotaction — "; color: var(--brand-2); font-weight: 700; }
+    .topbar .btn-ghost { display: none; }
+  }
+  @media (max-width: 560px) {
+    .container { padding: 0 18px; }
+    .kpis { grid-template-columns: 1fr; }
+    .hero-meta { gap: 22px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+    .reveal { opacity: 1; transform: none; }
+    .window { transform: none !important; }
+    .toast, .log-toast { opacity: 1 !important; transform: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="scrubber" id="scrubber"></div>
+
+<!-- ===================== TOP BAR ===================== -->
+<header class="topbar" id="topbar">
+  <div class="brand">
+    <span class="logo" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M4 20V10M9 20V4M14 20v-7M19 20V8" stroke="#0A0B14" stroke-width="2.6" stroke-linecap="round"/></svg>
+    </span>
+    <span>Synappli <span class="sep">/</span> <small>Pilotaction</small></span>
+  </div>
+  <div style="display:flex; gap:12px; align-items:center;">
+    <a class="btn btn-ghost" href="#demo">Voir le comparatif</a>
+    <a class="btn btn-primary" href="#cta">Demander une démo</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ===================== HERO ===================== -->
+  <section class="hero" data-scene>
+    <div class="container">
+      <span class="kicker reveal">Synappli présente — Pilotaction</span>
+      <h1 class="reveal d1" style="margin-top:22px;">
+        Arrêtez de piloter votre activité <span class="grad-text">sur un tableur.</span>
+      </h1>
+      <p class="lead reveal d2">
+        Excel a été formidable. Mais pour piloter des projets, des équipes et des données,
+        il devient vite une source d'erreurs, de pertes et de stress. Voici comment
+        <b style="color:var(--text)">Pilotaction</b> change la donne.
+      </p>
+      <div class="hero-actions reveal d3">
+        <button class="btn btn-primary" id="playDemo">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          Lancer la démonstration
+        </button>
+        <a class="btn btn-ghost" href="#excel">Découvrir en défilant</a>
+      </div>
+      <div class="hero-meta reveal d4">
+        <div><b>−90%</b> d'erreurs de saisie</div>
+        <div><b>1</b> seule source de vérité</div>
+        <div><b>100%</b> traçable</div>
+      </div>
+    </div>
+    <a class="scroll-hint" href="#excel" aria-label="Défiler">
+      Défilez
+      <svg class="chev" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </section>
+
+  <!-- ===================== EXCEL — LE MONDE D'AVANT ===================== -->
+  <section id="excel" data-scene>
+    <div class="container">
+      <div class="split" data-io>
+        <!-- Fake Excel window -->
+        <div class="win-shell">
+          <div class="window">
+            <div class="win-bar">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="win-file">Suivi_Projets_2024_v3_FINAL_(2)_corrigé_ok.xlsx</span>
+            </div>
+            <div class="xl">
+              <div class="xl-ribbon">
+                <span class="tab active">Feuil1</span>
+                <span class="tab">Feuil2 (copie)</span>
+                <span class="tab">Sauvegarde</span>
+                <span class="tab">NE PAS TOUCHER</span>
+              </div>
+              <div class="grid" id="xlGrid"><!-- filled by JS --></div>
+            </div>
+          </div>
+          <div class="toast t1"><span class="pip"></span> #REF! — formule cassée</div>
+          <div class="toast t2"><span class="pip"></span> 3 versions du fichier en circulation</div>
+          <div class="toast t3"><span class="pip"></span> Ligne supprimée par erreur</div>
+        </div>
+
+        <!-- Pain points -->
+        <div>
+          <span class="kicker rose reveal">Le monde d'avant</span>
+          <h2 class="reveal d1" style="margin:18px 0 14px;">Un tableur,<br>mille problèmes.</h2>
+          <p class="lead reveal d2" style="margin-bottom:30px;">
+            Au début, ça tient. Puis les colonnes se multiplient, les copies circulent par mail,
+            et personne ne sait plus quelle version fait foi.
+          </p>
+          <div class="pains">
+            <div class="pain reveal d1">
+              <span class="x">✕</span>
+              <div><b>Erreurs invisibles</b><span>Une cellule écrasée, une formule décalée… et le chiffre est faux sans que personne ne le voie.</span></div>
+            </div>
+            <div class="pain reveal d2">
+              <span class="x">✕</span>
+              <div><b>Guerre des versions</b><span>« v3_FINAL_(2) », copies par mail : impossible de savoir laquelle est la bonne.</span></div>
+            </div>
+            <div class="pain reveal d3">
+              <span class="x">✕</span>
+              <div><b>Perte de données</b><span>Un mauvais clic, un fichier non enregistré, et des heures de travail disparaissent.</span></div>
+            </div>
+            <div class="pain reveal d4">
+              <span class="x">✕</span>
+              <div><b>Aucune traçabilité</b><span>Qui a modifié quoi, quand, pourquoi ? Personne ne peut le dire.</span></div>
+            </div>
+            <div class="pain reveal d5">
+              <span class="x">✕</span>
+              <div><b>Collaboration bloquée</b><span>« Ferme le fichier, je dois l'ouvrir. » À plusieurs, tout se grippe.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== TRANSITION ===================== -->
+  <section class="band" data-scene>
+    <div class="container">
+      <span class="kicker reveal">Le déclic</span>
+      <h2 class="reveal d1" style="margin-top:20px;">
+        Et si le problème n'était pas votre équipe…<br><span class="em">mais votre outil ?</span>
+      </h2>
+    </div>
+  </section>
+
+  <!-- ===================== PILOTACTION ===================== -->
+  <section id="pilotaction" data-scene>
+    <div class="container">
+      <div style="text-align:center; margin-bottom:56px;">
+        <span class="kicker reveal">Le modèle Pilotaction</span>
+        <h2 class="reveal d1" style="margin:18px auto 14px; max-width:16ch;">
+          Le même travail. <span class="grad-text">Dix fois plus clair.</span>
+        </h2>
+        <p class="lead reveal d2" style="margin:0 auto;">
+          Pilotaction remplace le tableur par une vraie application de pilotage :
+          données structurées, collaboration temps réel, historique complet.
+        </p>
+      </div>
+
+      <!-- Fake Pilotaction app -->
+      <div class="win-shell" data-io>
+        <div class="app">
+          <div class="app-top">
+            <div class="brand" style="font-size:14px;">
+              <span class="logo" style="width:24px;height:24px;border-radius:7px;" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M4 20V10M9 20V4M14 20v-7M19 20V8" stroke="#0A0B14" stroke-width="2.8" stroke-linecap="round"/></svg>
+              </span>
+              Pilotaction
+            </div>
+            <div class="app-search">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              Rechercher un projet, une tâche, une personne…
+            </div>
+            <span class="live"><span class="dot-live"></span> 3 en ligne</span>
+            <div class="avatars">
+              <span style="background:#818CF8">CD</span>
+              <span style="background:#22D3EE">ML</span>
+              <span style="background:#A855F7">ST</span>
+            </div>
+          </div>
+          <div class="app-body">
+            <aside class="app-side">
+              <div class="nav-i active"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M4 13h6V4H4v9zm10 7h6v-9h-6v9zM4 20h6v-4H4v4zM14 4v5h6V4h-6z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span>Tableau de bord</span></div>
+              <div class="nav-i"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Projets</span></div>
+              <div class="nav-i"><svg class="ic" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M4 19c0-3 2-5 5-5s5 2 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Équipe</span></div>
+              <div class="nav-i"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span>Droits & rôles</span></div>
+              <div class="nav-i"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 4a5 5 0 00-5 5c0 4-2 5-2 5h14s-2-1-2-5a5 5 0 00-5-5zM10 19a2 2 0 004 0" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span>Alertes</span></div>
+              <div class="nav-i"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M5 19V5m0 14l4-3 4 2 6-5M9 16V9m4 9V11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Rapports</span></div>
+            </aside>
+            <main class="app-main">
+              <div class="kpis">
+                <div class="kpi">
+                  <div class="lab">Projets à l'heure</div>
+                  <div class="val br" data-count="94" data-suffix="%">0%</div>
+                  <div class="bar" style="--w:94%"><i></i></div>
+                </div>
+                <div class="kpi">
+                  <div class="lab">Données fiabilisées</div>
+                  <div class="val up" data-count="100" data-suffix="%">0%</div>
+                  <div class="bar" style="--w:100%"><i></i></div>
+                </div>
+                <div class="kpi">
+                  <div class="lab">Écarts détectés</div>
+                  <div class="val" data-count="0" data-suffix="">0</div>
+                  <div class="bar" style="--w:8%"><i></i></div>
+                </div>
+              </div>
+
+              <div class="ptable" id="pTable">
+                <div class="th"><div>Projet</div><div>Statut</div><div>Échéance</div><div></div></div>
+                <div class="tr"><div>Refonte site vitrine</div><div><span class="pill ok">● Terminé</span></div><div>12 juin</div><div class="who" style="background:#22D3EE">ML</div></div>
+                <div class="tr"><div>Migration CRM</div><div><span class="pill run">● En cours</span></div><div>28 juil.</div><div class="who" style="background:#818CF8">CD</div></div>
+                <div class="tr"><div>Campagne Q3</div><div><span class="pill late">● À suivre</span></div><div>05 août</div><div class="who" style="background:#A855F7">ST</div></div>
+                <!-- fresh row injected by JS -->
+              </div>
+            </main>
+          </div>
+        </div>
+
+        <!-- live activity log -->
+        <div class="log-toast">
+          <div class="lt-h">Journal d'activité — temps réel</div>
+          <div id="logRows"></div>
+        </div>
+      </div>
+
+      <!-- Benefits -->
+      <div class="benefits" style="margin-top:44px;" data-io>
+        <div class="ben reveal d1"><span class="v">✓</span><div><b>Données structurées & validées</b><span>Chaque champ est contrôlé à la saisie. Fini les erreurs invisibles.</span></div></div>
+        <div class="ben reveal d1"><span class="v">✓</span><div><b>Historique complet</b><span>Qui, quoi, quand : chaque modification est tracée et réversible.</span></div></div>
+        <div class="ben reveal d2"><span class="v">✓</span><div><b>Collaboration temps réel</b><span>Toute l'équipe sur la même donnée, sans conflit de versions.</span></div></div>
+        <div class="ben reveal d2"><span class="v">✓</span><div><b>Droits & rôles fins</b><span>Chacun voit et modifie exactement ce qu'il doit. Rien de plus.</span></div></div>
+        <div class="ben reveal d3"><span class="v">✓</span><div><b>Alertes automatiques</b><span>Un écart, un retard, un dépassement ? Vous êtes prévenu à temps.</span></div></div>
+        <div class="ben reveal d3"><span class="v">✓</span><div><b>Zéro perte de données</b><span>Tout est sauvegardé et versionné en continu, automatiquement.</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== COMPARATIF ===================== -->
+  <section id="demo" data-scene>
+    <div class="container compare">
+      <div style="text-align:center;">
+        <span class="kicker reveal">Face à face</span>
+        <h2 class="reveal d1" style="margin:18px auto 0; max-width:18ch;">Tableur Excel <span style="color:var(--muted)">vs</span> <span class="grad-text">Pilotaction</span></h2>
+      </div>
+      <div class="ctable reveal d2" data-io>
+        <div class="crow head">
+          <div class="head-cell">Critère</div>
+          <div class="c-excel head-cell">Tableur Excel</div>
+          <div class="c-pa head-cell">Pilotaction</div>
+        </div>
+        <!-- rows injected by JS for staggered reveal -->
+        <div id="cRows"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CTA ===================== -->
+  <section class="cta-wrap" id="cta">
+    <div class="container">
+      <div class="cta" data-io>
+        <span class="kicker reveal" style="position:relative;">Passez au pilotage</span>
+        <h2 class="reveal d1" style="margin-top:18px;">Du chaos du tableur au <span class="grad-text">pilotage maîtrisé.</span></h2>
+        <p class="reveal d2">Découvrez Pilotaction sur vos propres projets. On vous montre, en 20 minutes, ce que vous gagnez à quitter Excel.</p>
+        <div class="hero-actions reveal d3">
+          <a class="btn btn-primary" href="mailto:contact@synappli.com?subject=Démo%20Pilotaction">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            Demander une démo
+          </a>
+          <a class="btn btn-ghost" href="mailto:contact@synappli.com?subject=Pilotaction%20-%20En%20savoir%20plus">Nous contacter</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer>
+    <div class="container foot">
+      <div class="brand">
+        <span class="logo" style="width:26px;height:26px;border-radius:7px;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 20V10M9 20V4M14 20v-7M19 20V8" stroke="#0A0B14" stroke-width="2.8" stroke-linecap="round"/></svg>
+        </span>
+        Synappli — Pilotaction
+      </div>
+      <div>© 2026 Synappli. Le pilotage, enfin sous contrôle.</div>
+    </div>
+  </footer>
+
+</div>
+
+<!-- auto-demo indicator -->
+<div class="demo-flag" id="demoFlag">
+  <span>▶ Démonstration en cours…</span>
+  <span class="stop" id="demoStop">Arrêter</span>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- Scroll scrubber + topbar ---------- */
+  var scrubber = document.getElementById("scrubber");
+  var topbar = document.getElementById("topbar");
+  function onScroll() {
+    var h = document.documentElement;
+    var max = h.scrollHeight - h.clientHeight;
+    var p = max > 0 ? (h.scrollTop || document.body.scrollTop) / max : 0;
+    scrubber.style.width = (p * 100).toFixed(2) + "%";
+    topbar.style.background = (window.scrollY > 40)
+      ? "linear-gradient(to bottom, rgba(8,10,18,.9), rgba(8,10,18,.55))"
+      : "linear-gradient(to bottom, rgba(8,10,18,.72), rgba(8,10,18,0))";
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  /* ---------- Build the fake Excel grid ---------- */
+  var xlGrid = document.getElementById("xlGrid");
+  if (xlGrid) {
+    var cols = ["", "A", "B", "C", "D", "E", "F"];
+    // header row
+    cols.forEach(function (c) {
+      var d = document.createElement("div");
+      d.className = "c head";
+      d.textContent = c;
+      xlGrid.appendChild(d);
+    });
+    // data — deliberately messy
+    var rows = [
+      ["Projet Alpha", "12 000", "=B2*1,2", "OK", "Marie", "#REF!"],
+      ["Projet Beta", "8 500", "#VALUE!", "En retard", "", "230"],
+      ["Projet Gamma", "", "=B4/C4", "#DIV/0!", "Jean", "?"],
+      ["Projet Delta", "15 000", "18 0OO", "OK", "Marie", "=SOMME(B:B"],
+      ["Projet Epsilon", "9 200", "11 040", "annulé", "sophie", "402"],
+      ["Projet Zeta", "6 000", "#REF!", "OK", "", "180"],
+      ["", "", "", "", "", ""],
+      ["Projet Eta", "22 000", "=B9*C9", "doublon?", "Marie", "#NAME?"]
+    ];
+    var errFlags = { "#REF!": 1, "#VALUE!": 1, "#DIV/0!": 1, "#NAME?": 1 };
+    rows.forEach(function (r, ri) {
+      var rn = document.createElement("div");
+      rn.className = "c rownum";
+      rn.textContent = ri + 2;
+      xlGrid.appendChild(rn);
+      var ghost = (ri === 6); // the empty "deleted" row
+      r.forEach(function (val, ci) {
+        var d = document.createElement("div");
+        d.className = "c";
+        if (errFlags[val]) d.className += " err";
+        if (val === "18 0OO" || val === "=SOMME(B:B" || val === "?" || val === "doublon?") d.className += " warn";
+        if (val === "annulé") d.className += " strike";
+        if (ci === 2 && ri === 0) d.className += " flash"; // a value that flickers to error
+        if (ghost) d.className += " ghostrow";
+        d.textContent = val;
+        xlGrid.appendChild(d);
+      });
+    });
+  }
+
+  /* ---------- Comparison rows ---------- */
+  var cData = [
+    ["Fiabilité des données", "Erreurs invisibles, saisie libre", "Champs validés à la saisie"],
+    ["Versions", "v3_FINAL_(2), copies par mail", "Une seule source de vérité"],
+    ["Traçabilité", "Aucune — impossible à auditer", "Journal complet : qui, quoi, quand"],
+    ["Collaboration", "Le fichier se verrouille / s'écrase", "Temps réel, multi-utilisateurs"],
+    ["Droits d'accès", "Tout le monde voit tout", "Rôles & permissions fines"],
+    ["Perte de données", "Un clic suffit pour tout perdre", "Sauvegarde & versioning continus"],
+    ["Alertes", "On découvre les problèmes trop tard", "Alertes automatiques sur les écarts"],
+    ["Pilotage", "Consolidation manuelle, laborieuse", "Tableaux de bord en temps réel"],
+    ["Passage à l'échelle", "S'effondre au-delà de quelques onglets", "Conçu pour grandir avec vous"]
+  ];
+  var cRows = document.getElementById("cRows");
+  if (cRows) {
+    var xIco = '<span class="mk bad"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></span>';
+    var okIco = '<span class="mk ok"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
+    cData.forEach(function (row) {
+      var el = document.createElement("div");
+      el.className = "crow";
+      el.innerHTML =
+        '<div class="crit">' + row[0] + '</div>' +
+        '<div class="c-excel">' + xIco + '<span>' + row[1] + '</span></div>' +
+        '<div class="c-pa">' + okIco + '<span>' + row[2] + '</span></div>';
+      cRows.appendChild(el);
+    });
+  }
+
+  /* ---------- Activity log ticker ---------- */
+  var logEntries = [
+    ['<b>Marie</b> a validé <span class="tk">Refonte site</span>', "il y a 2 min"],
+    ['<b>CD</b> a mis à jour <span class="tk">Migration CRM</span>', "il y a 5 min"],
+    ['<b>Système</b> a sauvegardé la version <span class="tk">#1284</span>', "il y a 6 min"],
+    ['<b>Sophie</b> a créé <span class="tk">Campagne Q3</span>', "il y a 9 min"]
+  ];
+  var logRows = document.getElementById("logRows");
+  if (logRows) {
+    logEntries.forEach(function (e) {
+      var d = document.createElement("div");
+      d.className = "log-row";
+      d.innerHTML = '<span>' + e[0] + '</span>';
+      logRows.appendChild(d);
+    });
+  }
+
+  /* ---------- IntersectionObserver: reveals + scene triggers ---------- */
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting) {
+        en.target.classList.add("in");
+        // stagger reveal children
+        var reveals = en.target.querySelectorAll(".reveal");
+        reveals.forEach(function (r) { r.classList.add("in"); });
+        io.unobserve(en.target);
+      }
+    });
+  }, { threshold: 0.25 });
+  document.querySelectorAll("[data-io]").forEach(function (el) { io.observe(el); });
+
+  // reveal for standalone .reveal blocks (hero, headings not inside data-io)
+  var io2 = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting) { en.target.classList.add("in"); io2.unobserve(en.target); }
+    });
+  }, { threshold: 0.2 });
+  document.querySelectorAll(".reveal").forEach(function (el) {
+    if (!el.closest("[data-io]")) io2.observe(el);
+  });
+
+  /* ---------- KPI count-up + fresh row when app in view ---------- */
+  var appEl = document.querySelector(".app");
+  var counted = false;
+  if (appEl) {
+    var appIo = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting && !counted) {
+          counted = true;
+          en.target.classList.add("in");
+          // count up
+          en.target.querySelectorAll("[data-count]").forEach(function (node) {
+            var target = parseInt(node.getAttribute("data-count"), 10);
+            var suffix = node.getAttribute("data-suffix") || "";
+            if (reduced) { node.textContent = target + suffix; return; }
+            var start = null, dur = 1200;
+            function step(ts) {
+              if (!start) start = ts;
+              var prog = Math.min((ts - start) / dur, 1);
+              var eased = 1 - Math.pow(1 - prog, 3);
+              node.textContent = Math.round(target * eased) + suffix;
+              if (prog < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+          });
+          // inject a fresh collaborative row after a beat
+          if (!reduced) {
+            setTimeout(function () {
+              var t = document.getElementById("pTable");
+              if (!t) return;
+              var row = document.createElement("div");
+              row.className = "tr fresh";
+              row.innerHTML = '<div>Onboarding client</div><div><span class="pill run">● En cours</span></div><div>19 août</div><div class="who" style="background:#34D399">ML</div>';
+              t.appendChild(row);
+            }, 1400);
+          }
+          appIo.unobserve(en.target);
+        }
+      });
+    }, { threshold: 0.35 });
+    appIo.observe(appEl);
+  }
+
+  /* ---------- "Lancer la démonstration" — auto-scroll timeline ---------- */
+  var scenes = Array.prototype.slice.call(document.querySelectorAll("[data-scene]"));
+  var playBtn = document.getElementById("playDemo");
+  var demoFlag = document.getElementById("demoFlag");
+  var demoStop = document.getElementById("demoStop");
+  var demoTimers = [];
+  var demoRunning = false;
+
+  function clearDemo() {
+    demoTimers.forEach(clearTimeout);
+    demoTimers = [];
+    demoRunning = false;
+    demoFlag.classList.remove("show");
+  }
+  function stopOnUserScroll() {
+    if (demoRunning) clearDemo();
+  }
+  function runDemo() {
+    if (demoRunning) return;
+    demoRunning = true;
+    demoFlag.classList.add("show");
+    var delay = 0;
+    var perScene = 3400;
+    scenes.forEach(function (sc, i) {
+      var t = setTimeout(function () {
+        sc.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+        if (i === scenes.length - 1) {
+          var end = setTimeout(clearDemo, 2600);
+          demoTimers.push(end);
+        }
+      }, delay);
+      demoTimers.push(t);
+      delay += perScene;
+    });
+    // let the auto-scroll begin without immediately self-cancelling
+    setTimeout(function () {
+      window.addEventListener("wheel", stopOnUserScroll, { passive: true, once: true });
+      window.addEventListener("touchmove", stopOnUserScroll, { passive: true, once: true });
+    }, 600);
+  }
+  if (playBtn) playBtn.addEventListener("click", runDemo);
+  if (demoStop) demoStop.addEventListener("click", clearDemo);
+
+})();
+</script>
+</body>
+</html>

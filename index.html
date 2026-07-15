@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Pilotaction — Du tableur au pilotage | Synappli</title>
-<meta name="description" content="Présentation Synappli : pourquoi piloter son activité sur Excel devient ingérable (erreurs, perte de données, versions), et comment l'application Pilotaction apporte une gestion fine, fiable et collaborative." />
+<title>Pilotaction — Pilotez vos plans d'actions | Synappli</title>
+<meta name="description" content="Présentation Synappli : pourquoi suivre ses plans d'actions sur Excel devient ingérable (erreurs, retards invisibles, perte de données), et comment l'application Pilotaction apporte un pilotage fin, fiable et collaboratif — pilotes, échéances, alertes, revue d'efficacité, droits par rôle." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet" />
@@ -12,6 +12,7 @@
   /* =========================================================
      PILOTACTION × SYNAPPLI — Présentation animée
      Direction artistique reprise du site Synappli.
+     Produit : Pilotaction — Pilotage de plans d'actions.
      Page autonome (hors polices Google, déjà chargées par le site).
      ========================================================= */
 
@@ -24,7 +25,6 @@
     --gray:#4a5060; --gray-soft:#6a7180;
     --light:#ced8e6; --light-soft:#dde4ee; --text:#1a2035;
 
-    /* couleurs sémantiques (usage restreint : "problème" / "succès") */
     --bad:#c53a4b; --bad-l:#fdecee; --bad-d:#9b2c3a;
     --warn:#b45309; --warn-l:#fef6e7;
     --ok:#0f9d58; --ok-l:#e7f6ee;
@@ -55,9 +55,12 @@
 
   .container { width:100%; max-width:var(--max); margin:0 auto; padding:0 40px; }
   h1,h2,h3 { font-family:var(--display); color:var(--navy); letter-spacing:-.012em; line-height:1.15; }
-  .mono { font-family:var(--mono); font-variant-numeric:tabular-nums; }
 
-  /* ---------- Eyebrow / labels (repris du site) ---------- */
+  /* Logo Synappli (SVG vectoriel) */
+  .s-logo { display:block; color:var(--teal); }
+  .s-logo svg { display:block; width:100%; height:100%; }
+
+  /* ---------- Eyebrow / labels ---------- */
   .section-label {
     display:inline-flex; align-items:center; gap:10px;
     font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em;
@@ -67,7 +70,7 @@
   .section-label.rose { color:var(--bad); }
   .section-label.on-dark { color:#5fb4d4; }
 
-  /* ---------- Buttons (repris du site) ---------- */
+  /* ---------- Buttons ---------- */
   .btn-primary {
     display:inline-flex; align-items:center; gap:9px;
     background:var(--blue); color:#fff; font-weight:600; font-size:.95rem;
@@ -108,19 +111,15 @@
   }
   .nav-inner { width:100%; max-width:var(--max); margin:0 auto; display:flex; align-items:center; gap:12px; }
   .site-logo { display:flex; align-items:center; gap:11px; }
-  .logo-mark {
-    width:34px; height:34px; border-radius:9px; display:grid; place-items:center;
-    background:linear-gradient(135deg,var(--teal) 0,var(--teal-d) 100%); box-shadow:var(--shadow-teal);
-  }
-  .logo-mark svg { width:19px; height:19px; }
-  .logo-wordmark { font-family:var(--display); font-weight:800; color:var(--navy); font-size:1.05rem; letter-spacing:-.01em; }
+  .site-logo .s-logo { width:30px; height:36px; }
+  .logo-wordmark { font-family:var(--display); font-weight:800; color:var(--navy); font-size:1.05rem; letter-spacing:-.01em; line-height:1; }
   .logo-wordmark span { color:var(--teal); font-weight:700; }
+  .logo-wordmark small { display:block; font-family:var(--font); font-size:.62rem; font-weight:500; color:var(--gray-soft); letter-spacing:.04em; margin-top:3px; text-transform:none; }
   .nav-menu { display:flex; align-items:center; gap:4px; list-style:none; margin-left:auto; }
   .nav-menu a { font-size:.92rem; font-weight:500; color:var(--navy); padding:8px 14px; border-radius:var(--r); transition:background .15s,color .15s; }
   .nav-menu a:hover { background:var(--off); }
 
   /* ---------- Sections ---------- */
-  section { position:relative; }
   .section { padding:88px 0; }
   .section-inner { max-width:var(--max); margin:0 auto; padding:0 40px; }
   .section-bg { background:linear-gradient(180deg,var(--off) 0,var(--off-2) 100%); border-top:1px solid var(--light); border-bottom:1px solid var(--light); }
@@ -132,7 +131,6 @@
   .center { text-align:center; }
   .center .lead { margin-left:auto; margin-right:auto; }
 
-  /* Reveal on scroll (repris du site) */
   .reveal { opacity:0; transform:translateY(16px); transition:opacity .6s ease,transform .6s ease; }
   .reveal.in-view { opacity:1; transform:none; }
   .reveal.d1 { transition-delay:.08s; } .reveal.d2 { transition-delay:.16s; }
@@ -158,22 +156,17 @@
   .hero-badge .dot { width:7px; height:7px; border-radius:50%; background:var(--teal); box-shadow:0 0 0 4px rgba(4,108,145,.15); animation:pulse 2.4s ease-in-out infinite; }
   .hero-badge strong { color:var(--navy); font-weight:700; }
   @keyframes pulse { 0%,100%{ box-shadow:0 0 0 4px rgba(4,108,145,.15) } 50%{ box-shadow:0 0 0 7px rgba(4,108,145,.04) } }
-  .hero h1 { font-size:clamp(2.1rem,3.7vw,3.1rem); font-weight:800; line-height:1.12; margin-bottom:1.25rem; letter-spacing:-.018em; max-width:15ch; }
+  .hero h1 { font-size:clamp(2.1rem,3.7vw,3.05rem); font-weight:800; line-height:1.12; margin-bottom:1.25rem; letter-spacing:-.018em; max-width:15ch; }
   .hero h1 .accent { color:var(--teal); }
   .hero p.lead { margin-bottom:2rem; }
   .hero p.lead strong { color:var(--navy); font-weight:600; }
-  .kpi-strip { display:flex; flex-wrap:wrap; gap:1.1rem 2.6rem; padding:1.4rem 0 .25rem; border-top:1px solid var(--light); margin-top:2rem; }
+  .kpi-strip { display:flex; flex-wrap:wrap; gap:1.1rem 2.4rem; padding:1.4rem 0 .25rem; border-top:1px solid var(--light); margin-top:2rem; }
   .kpi-strip .kpi { display:flex; flex-direction:column; }
-  .kpi-strip .kpi-num { font-family:var(--mono); font-size:1.6rem; font-weight:600; color:var(--teal-d); line-height:1.1; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+  .kpi-strip .kpi-num { font-family:var(--mono); font-size:1.55rem; font-weight:600; color:var(--teal-d); line-height:1.1; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
   .kpi-strip .kpi-lbl { font-size:.78rem; color:var(--gray); text-transform:uppercase; letter-spacing:.05em; margin-top:.35rem; font-weight:500; }
 
-  /* Hero visual : mini avant/après */
   .hero-visual { position:relative; }
-  .ba-teaser {
-    display:grid; grid-template-columns:1fr auto 1fr; align-items:stretch;
-    border:1px solid var(--light); border-radius:var(--r-lg); overflow:hidden;
-    box-shadow:var(--shadow-lg); background:#fff;
-  }
+  .ba-teaser { display:grid; grid-template-columns:1fr auto 1fr; align-items:stretch; border:1px solid var(--light); border-radius:var(--r-lg); overflow:hidden; box-shadow:var(--shadow-lg); background:#fff; }
   .ba-side { padding:1.4rem 1.4rem 1.5rem; }
   .ba-side .ba-h { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.09em; display:flex; align-items:center; gap:.45rem; margin-bottom:.9rem; }
   .ba-before { background:#fbfcfe; }
@@ -185,7 +178,7 @@
   .ba-after .ba-dot { background:var(--teal); }
   .ba-line { display:flex; align-items:flex-start; gap:.55rem; font-size:.82rem; color:var(--gray); line-height:1.45; margin-bottom:.65rem; }
   .ba-line:last-child { margin-bottom:0; }
-  .ba-line .ic { flex:0 0 auto; width:15px; height:15px; margin-top:1px; }
+  .ba-line .ic { flex:0 0 auto; width:15px; font-weight:700; }
   .ba-before .ba-line .ic { color:var(--bad); }
   .ba-after .ba-line .ic { color:var(--teal); }
   .ba-after .ba-line { color:#243142; }
@@ -193,7 +186,7 @@
   .ba-arrow svg { width:22px; height:22px; }
 
   /* =========================================================
-     STATS BAND (repris du site)
+     STATS BAND
      ========================================================= */
   .stats-band { padding:34px 0; }
   .stats-band-inner { max-width:var(--max); margin:0 auto; padding:0 40px; display:grid; grid-template-columns:repeat(4,1fr); gap:1.5rem; }
@@ -207,10 +200,7 @@
      ========================================================= */
   .split { display:grid; grid-template-columns:1.02fr .98fr; gap:52px; align-items:center; }
   .win-shell { position:relative; }
-  .window {
-    border-radius:var(--r-lg); overflow:hidden; box-shadow:var(--shadow-lg); border:1px solid var(--light);
-    transform:perspective(1600px) rotateY(5deg) rotateX(1.5deg); transition:transform .8s cubic-bezier(.2,.7,.2,1);
-  }
+  .window { border-radius:var(--r-lg); overflow:hidden; box-shadow:var(--shadow-lg); border:1px solid var(--light); transform:perspective(1600px) rotateY(5deg) rotateX(1.5deg); transition:transform .8s cubic-bezier(.2,.7,.2,1); }
   .split.in-view .window { transform:perspective(1600px) rotateY(0) rotateX(0); }
   .win-bar { display:flex; align-items:center; gap:8px; padding:11px 14px; background:#E7E9EE; border-bottom:1px solid #cfd3dc; }
   .dot { width:11px; height:11px; border-radius:50%; }
@@ -220,8 +210,8 @@
   .xl-ribbon { display:flex; align-items:center; background:#107C41; height:30px; }
   .xl-ribbon .tab { color:#eafff2; font-size:11.5px; padding:0 13px; height:100%; display:flex; align-items:center; font-weight:600; white-space:nowrap; }
   .xl-ribbon .tab.active { background:#fff; color:#0B5A2F; }
-  .grid { display:grid; grid-template-columns:34px repeat(6,1fr); font-size:12px; font-family:var(--mono); }
-  .grid .c { border-right:1px solid #E6E8EC; border-bottom:1px solid #E6E8EC; padding:6px 8px; min-height:28px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; background:#fff; color:#2a2f3a; }
+  .grid { display:grid; grid-template-columns:30px .8fr 1.5fr .9fr .8fr 1fr .6fr; font-size:11.5px; font-family:var(--mono); }
+  .grid .c { border-right:1px solid #E6E8EC; border-bottom:1px solid #E6E8EC; padding:6px 7px; min-height:28px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; background:#fff; color:#2a2f3a; }
   .grid .head { background:#F3F4F7; color:#7b818e; text-align:center; font-weight:700; }
   .grid .rownum { background:#F3F4F7; color:#7b818e; text-align:center; font-weight:700; }
   .grid .err { background:var(--bad-l); color:var(--bad); font-weight:700; }
@@ -232,11 +222,7 @@
   .grid .ghostrow { animation:ghostdelete 4.6s ease-in-out infinite; }
   @keyframes ghostdelete { 0%,40%{ opacity:1 } 55%,75%{ opacity:.12; transform:translateX(6px) } 90%,100%{ opacity:1; transform:none } }
 
-  .toast {
-    position:absolute; z-index:5; background:#fff; border:1px solid var(--light);
-    padding:9px 13px; border-radius:8px; font-size:12.5px; font-weight:600; color:var(--navy);
-    box-shadow:var(--shadow-md); display:flex; align-items:center; gap:8px; opacity:0; transform:translateY(8px) scale(.96);
-  }
+  .toast { position:absolute; z-index:5; background:#fff; border:1px solid var(--light); padding:9px 13px; border-radius:8px; font-size:12.5px; font-weight:600; color:var(--navy); box-shadow:var(--shadow-md); display:flex; align-items:center; gap:8px; opacity:0; transform:translateY(8px) scale(.96); }
   .split.in-view .toast { animation:pop .6s forwards; }
   .split.in-view .toast.t1 { animation-delay:.7s; }
   .split.in-view .toast.t2 { animation-delay:1.05s; }
@@ -247,7 +233,6 @@
   .toast.t2 { bottom:64px; left:-26px; }
   .toast.t3 { bottom:-16px; right:26px; }
 
-  /* pain cards */
   .pains { display:flex; flex-direction:column; gap:12px; }
   .pain { display:flex; gap:14px; align-items:flex-start; padding:15px 17px; border-radius:var(--r-lg); background:#fff; border:1px solid var(--light); position:relative; overflow:hidden; transition:border-color .2s, box-shadow .2s; }
   .pain::before { content:""; position:absolute; top:0; left:0; bottom:0; width:3px; background:var(--bad); opacity:.55; }
@@ -258,13 +243,14 @@
   .pain span { color:var(--gray); font-size:13.5px; line-height:1.5; }
 
   /* =========================================================
-     App Pilotaction (fond sombre, style .app-demo-preview du site)
+     App Pilotaction (fond sombre, style app réelle)
      ========================================================= */
   .app { border-radius:var(--r-lg); overflow:hidden; border:1px solid #1e2438; background:linear-gradient(135deg,#06080f 0,#0f1320 100%); box-shadow:0 30px 70px -24px rgba(10,16,32,.55); }
   .app-top { display:flex; align-items:center; gap:14px; padding:13px 16px; border-bottom:1px solid #1e2438; background:rgba(255,255,255,.02); }
   .app-logo { display:flex; align-items:center; gap:9px; color:#e8ecf4; font-family:var(--display); font-weight:700; font-size:14px; }
-  .app-logo .lm { width:22px; height:22px; border-radius:6px; display:grid; place-items:center; background:linear-gradient(135deg,#0788b4,#046c91); }
-  .app-logo .lm svg { width:13px; height:13px; }
+  .app-logo .lm { width:24px; height:24px; border-radius:7px; display:grid; place-items:center; background:linear-gradient(135deg,#3b82f6,#06b6d4); }
+  .app-logo .lm svg { width:14px; height:14px; }
+  .app-logo small { display:block; font-family:var(--font); font-size:9px; font-weight:500; color:#5a6480; letter-spacing:.02em; margin-top:1px; }
   .app-search { flex:1; height:30px; border-radius:7px; background:#0b0e18; border:1px solid #1e2438; display:flex; align-items:center; padding:0 11px; color:#5a6480; font-size:12px; gap:8px; }
   .app-live { display:inline-flex; align-items:center; gap:6px; font-size:11px; color:#4ade80; font-weight:600; background:rgba(74,222,128,.1); padding:4px 9px; border-radius:100px; border:1px solid rgba(74,222,128,.22); }
   .app-live .d { width:6px; height:6px; border-radius:50%; background:#4ade80; box-shadow:0 0 0 2px rgba(74,222,128,.25); animation:appdot 2s infinite; }
@@ -272,54 +258,58 @@
   .avatars { display:flex; }
   .avatars span { width:26px; height:26px; border-radius:50%; margin-left:-7px; border:2px solid #0f1320; display:grid; place-items:center; font-size:10px; font-weight:700; color:#06080f; font-family:var(--font); }
 
-  .app-body { display:grid; grid-template-columns:168px 1fr; min-height:388px; }
+  .app-body { display:grid; grid-template-columns:184px 1fr; min-height:392px; }
   .app-side { border-right:1px solid #1e2438; padding:14px 10px; display:flex; flex-direction:column; gap:3px; }
-  .nav-i { display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:8px; font-size:12.5px; color:#7a86a0; font-weight:500; }
+  .side-h { font-size:9px; font-weight:700; color:#4a5470; text-transform:uppercase; letter-spacing:.12em; padding:6px 11px 4px; }
+  .nav-i { display:flex; align-items:center; gap:10px; padding:8px 11px; border-radius:8px; font-size:12.5px; color:#7a86a0; font-weight:500; }
   .nav-i.active { background:rgba(59,130,246,.14); color:#dbe4f5; font-weight:600; }
   .nav-i.active .ic { color:#6ba5f7; }
-  .nav-i .ic { width:15px; height:15px; opacity:.9; color:#5a6480; }
+  .nav-i .ic { width:15px; height:15px; opacity:.9; color:#5a6480; flex:none; }
   .app-main { padding:18px; display:flex; flex-direction:column; gap:16px; }
   .mini-dash { display:grid; grid-template-columns:repeat(3,1fr); gap:11px; }
   .mini-kpi { background:#0f1320; border:1px solid #1e2438; border-radius:9px; padding:12px 13px; }
   .mini-kpi .ml { font-size:.62rem; color:#5a6480; text-transform:uppercase; letter-spacing:.04em; font-weight:600; }
   .mini-kpi .mv { font-family:var(--display); font-size:1.5rem; font-weight:700; color:#e8ecf4; line-height:1; margin-top:6px; }
-  .mini-kpi .mv.teal { color:#5fd0e6; } .mini-kpi .mv.green { color:#4ade80; }
+  .mini-kpi .mv.teal { color:#5fd0e6; } .mini-kpi .mv.green { color:#4ade80; } .mini-kpi .mv.amber { color:#fbbf24; }
   .mini-kpi .mbar { height:4px; border-radius:2px; background:#1e2438; margin-top:9px; overflow:hidden; }
-  .mini-kpi .mbar span { display:block; height:100%; width:0; border-radius:2px; background:linear-gradient(90deg,#0788b4,#3b82f6); transition:width 1.3s cubic-bezier(.2,.7,.2,1); }
+  .mini-kpi .mbar span { display:block; height:100%; width:0; border-radius:2px; background:linear-gradient(90deg,#3b82f6,#06b6d4); transition:width 1.3s cubic-bezier(.2,.7,.2,1); }
+  .mini-kpi .mbar.a span { background:linear-gradient(90deg,#f59e0b,#ef4444); }
   .app.in-view .mini-kpi .mbar span { width:var(--w,70%); }
 
   .dtable { background:#0f1320; border:1px solid #1e2438; border-radius:9px; overflow:hidden; }
-  .dtable .th,.dtable .tr { display:grid; grid-template-columns:1.6fr 1fr .9fr 34px; gap:8px; align-items:center; padding:10px 14px; font-size:12.5px; }
+  .dtable .th,.dtable .tr { display:grid; grid-template-columns:1.7fr 1fr .7fr 32px; gap:8px; align-items:center; padding:10px 14px; font-size:12.5px; }
   .dtable .th { color:#5a6480; font-weight:600; font-size:.62rem; letter-spacing:.05em; text-transform:uppercase; border-bottom:1px solid #1e2438; }
   .dtable .tr { border-top:1px solid #171d30; color:#c3ccdf; }
   .dtable .tr.fresh { animation:slidein .7s cubic-bezier(.2,.7,.2,1); }
   @keyframes slidein { from{ opacity:0; transform:translateY(-10px); background:rgba(59,130,246,.14) } to{ opacity:1 } }
-  .pill { display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:600; padding:3px 9px; border-radius:100px; }
+  .dtable .av { font-family:var(--mono); color:#8892a8; font-size:11.5px; }
+  .pill { display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:600; padding:3px 9px; border-radius:100px; white-space:nowrap; }
   .pill.ok { background:rgba(74,222,128,.13); color:#4ade80; }
   .pill.run { background:rgba(59,130,246,.16); color:#6ba5f7; }
-  .pill.late { background:rgba(251,191,36,.14); color:#fbbf24; }
+  .pill.late { background:rgba(239,68,68,.14); color:#f87171; }
+  .pill.plan { background:rgba(148,163,184,.14); color:#9aa6c0; }
   .who { width:23px; height:23px; border-radius:50%; display:grid; place-items:center; font-size:10px; font-weight:700; color:#06080f; font-family:var(--font); }
 
-  .log-toast { position:absolute; right:-18px; bottom:40px; z-index:6; width:248px; background:#0f1320; border:1px solid #1e2438; border-radius:10px; padding:12px 14px; box-shadow:0 22px 50px -18px rgba(0,0,0,.6); opacity:0; transform:translateX(20px); }
+  .log-toast { position:absolute; right:-18px; bottom:40px; z-index:6; width:250px; background:#0f1320; border:1px solid #1e2438; border-radius:10px; padding:12px 14px; box-shadow:0 22px 50px -18px rgba(0,0,0,.6); opacity:0; transform:translateX(20px); }
   .app.in-view .log-toast { animation:pop .6s .9s forwards; }
   .log-toast .lt-h { font-size:.62rem; color:#5a6480; text-transform:uppercase; letter-spacing:.08em; font-weight:700; margin-bottom:9px; }
-  .log-row { display:flex; gap:9px; font-size:11.5px; padding:5px 0; color:#8892a8; }
+  .log-row { display:flex; gap:9px; font-size:11.5px; padding:5px 0; color:#8892a8; line-height:1.4; }
   .log-row b { color:#dbe4f5; font-weight:600; }
   .log-row .tk { color:#5fd0e6; }
+  .log-row .rd { color:#f87171; }
 
-  /* benefits (cartes style .feature du site) */
   .benefits { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
   .ben { display:flex; gap:13px; align-items:flex-start; padding:16px 17px; border-radius:var(--r-lg); background:#fff; border:1px solid var(--light); position:relative; overflow:hidden; transition:border-color .2s,transform .2s,box-shadow .2s; }
   .ben::before { content:""; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--teal),var(--teal-d)); transform:scaleX(0); transform-origin:left; transition:transform .25s ease; }
   .ben:hover { border-color:var(--teal-l); transform:translateY(-2px); box-shadow:var(--shadow-md); }
   .ben:hover::before { transform:scaleX(1); }
-  .ben .v { flex:0 0 auto; width:28px; height:28px; border-radius:8px; display:grid; place-items:center; background:var(--teal-l); color:var(--teal-d); }
+  .ben .v { flex:0 0 auto; width:30px; height:30px; border-radius:8px; display:grid; place-items:center; background:var(--teal-l); color:var(--teal-d); }
   .ben .v svg { width:16px; height:16px; }
   .ben b { display:block; font-size:15px; color:var(--navy); margin-bottom:2px; }
   .ben span { color:var(--gray); font-size:13.5px; line-height:1.5; }
 
   /* =========================================================
-     Tableau comparatif (repris du site : .compare-table)
+     Tableau comparatif (.compare-table du site)
      ========================================================= */
   .compare-wrap { overflow-x:auto; border-radius:14px; background:#fff; box-shadow:0 12px 40px -16px rgba(26,32,53,.16); border:1px solid var(--light); padding:6px; margin-top:2.5rem; }
   .compare-table { width:100%; border-collapse:separate; border-spacing:0; min-width:720px; font-size:.92rem; }
@@ -329,7 +319,6 @@
   .compare-table thead .th-excel { color:var(--bad); }
   .compare-table tbody th { font-weight:600; color:var(--navy); width:26%; font-size:.92rem; }
   .compare-table td { color:var(--gray); }
-  .compare-table .td-excel { color:var(--gray); }
   .compare-table .td-excel .xm { color:var(--bad); margin-right:7px; vertical-align:-2px; display:inline-block; }
   .compare-table .td-excel .xm svg { width:14px; height:14px; }
   .compare-table tbody tr:last-child th,.compare-table tbody tr:last-child td { border-bottom:0; }
@@ -343,26 +332,22 @@
   .compare-table tbody tr:hover .ct-highlight { background:linear-gradient(180deg,rgba(6,182,212,.12),rgba(4,108,145,.06)); }
 
   /* =========================================================
-     CTA (style .section-dark + guide-block du site)
+     CTA + footer
      ========================================================= */
-  .cta-block {
-    background:linear-gradient(135deg,var(--navy) 0,#252d4b 100%); color:#fff;
-    border-radius:14px; padding:56px 48px; text-align:center; position:relative; overflow:hidden;
-  }
+  .cta-block { background:linear-gradient(135deg,var(--navy) 0,#252d4b 100%); color:#fff; border-radius:14px; padding:56px 48px; text-align:center; position:relative; overflow:hidden; }
   .cta-block::after { content:""; position:absolute; top:-80px; right:-80px; width:300px; height:300px; background:radial-gradient(circle,rgba(4,108,145,.2) 0,transparent 65%); pointer-events:none; }
   .cta-block > * { position:relative; z-index:1; }
   .cta-block .section-label { justify-content:center; }
   .cta-block h2 { color:#fff; font-size:clamp(1.6rem,2.8vw,2.2rem); margin:0 auto .9rem; max-width:18ch; }
-  .cta-block p { color:rgba(255,255,255,.72); max-width:46ch; margin:0 auto 2rem; font-size:1.05rem; }
+  .cta-block p { color:rgba(255,255,255,.72); max-width:48ch; margin:0 auto 2rem; font-size:1.05rem; }
   .cta-block .btn-row { justify-content:center; }
 
-  /* Footer */
   footer { background:var(--navy); color:rgba(255,255,255,.55); padding:40px 0 26px; }
   .footer-inner { max-width:var(--max); margin:0 auto; padding:0 40px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; font-size:.88rem; }
-  .footer-inner .site-logo .logo-wordmark { color:#fff; }
-  .footer-inner .site-logo .logo-wordmark span { color:#5fb4d4; }
+  .footer-inner .site-logo .s-logo { color:#5fb4d4; }
+  .footer-inner .logo-wordmark { color:#fff; }
+  .footer-inner .logo-wordmark span { color:#5fb4d4; }
 
-  /* auto-demo flag */
   .demo-flag { position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px); z-index:150; background:#fff; border:1px solid var(--light); padding:10px 16px; border-radius:100px; font-size:13px; font-weight:600; color:var(--navy); box-shadow:var(--shadow-lg); display:flex; align-items:center; gap:12px; opacity:0; pointer-events:none; transition:opacity .3s,transform .3s; }
   .demo-flag.show { opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; }
   .demo-flag .pl { color:var(--teal-d); display:inline-flex; align-items:center; gap:7px; }
@@ -381,6 +366,7 @@
     .stat-item:nth-child(2)::after { display:none; }
     .app-body { grid-template-columns:1fr; }
     .app-side { flex-direction:row; overflow-x:auto; border-right:none; border-bottom:1px solid #1e2438; }
+    .side-h { display:none; }
     .nav-i span { display:none; }
     .log-toast { position:static; width:auto; margin-top:8px; opacity:1; transform:none; }
     .app.in-view .log-toast { animation:none; }
@@ -399,7 +385,6 @@
     .btn-row { flex-direction:column; }
     .btn-primary,.btn-outline,.btn-outline-white { justify-content:center; }
   }
-
   @media (prefers-reduced-motion:reduce) {
     * { animation:none !important; transition:none !important; scroll-behavior:auto !important; }
     .reveal { opacity:1; transform:none; }
@@ -412,14 +397,23 @@
 
 <div class="scrubber" id="scrubber"></div>
 
+<!-- Logo Synappli réutilisable (defs) — instancié via <use> -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="synappli-mark">
+      <path d="M170 66 C168 38 140 20 106 24 C60 29 26 66 30 112 C32 138 48 152 70 151 C58 146 50 132 49 116 C47 82 74 55 108 54 C133 53 150 66 152 86 C160 82 168 76 170 66 Z"/>
+      <path transform="rotate(180 100 120)" d="M170 66 C168 38 140 20 106 24 C60 29 26 66 30 112 C32 138 48 152 70 151 C58 146 50 132 49 116 C47 82 74 55 108 54 C133 53 150 66 152 86 C160 82 168 76 170 66 Z"/>
+      <circle cx="100" cy="120" r="21"/>
+    </g>
+  </defs>
+</svg>
+
 <!-- ===================== NAV ===================== -->
 <header id="nav">
   <div class="nav-inner">
     <a class="site-logo" href="#top">
-      <span class="logo-mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none"><path d="M4 20V10M9 20V4M14 20v-7M19 20V8" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>
-      </span>
-      <span class="logo-wordmark">Synappli <span>· Pilotaction</span></span>
+      <span class="s-logo"><svg viewBox="0 0 200 240" fill="currentColor" aria-hidden="true"><use href="#synappli-mark"/></svg></span>
+      <span class="logo-wordmark">Synappli <span>· Pilotaction</span><small>Pilotage de plans d'actions</small></span>
     </a>
     <nav class="nav-menu">
       <a href="#excel">Le constat</a>
@@ -436,12 +430,12 @@
 <section class="hero" data-scene>
   <div class="hero-inner">
     <div class="hero-text">
-      <span class="hero-badge reveal"><span class="dot"></span> Présentation <strong>Pilotaction</strong></span>
-      <h1 class="reveal d1">Arrêtez de piloter votre activité <span class="accent">sur un tableur.</span></h1>
+      <span class="hero-badge reveal"><span class="dot"></span> <strong>Pilotaction</strong> · Pilotage de plans d'actions</span>
+      <h1 class="reveal d1">Arrêtez de suivre vos plans d'actions <span class="accent">sur un tableur.</span></h1>
       <p class="lead reveal d2">
-        Excel a rendu service. Mais pour piloter des projets, des équipes et des données au quotidien,
-        il devient une source d'erreurs, de pertes et de temps perdu. Voici comment
-        <strong>Pilotaction</strong> remet de l'ordre.
+        Actions correctives, pilotes, échéances, avancement, revue d'efficacité… Sur Excel, tout ça
+        finit par vous échapper. <strong>Pilotaction</strong> transforme vos plans d'actions en un
+        pilotage clair, fiable et collaboratif.
       </p>
       <div class="btn-row reveal d3">
         <button class="btn-primary" id="playDemo">
@@ -452,8 +446,8 @@
       </div>
       <div class="kpi-strip reveal d4">
         <div class="kpi"><span class="kpi-num">−90%</span><span class="kpi-lbl">Erreurs de saisie</span></div>
-        <div class="kpi"><span class="kpi-num">1</span><span class="kpi-lbl">Source de vérité</span></div>
-        <div class="kpi"><span class="kpi-num">100%</span><span class="kpi-lbl">Traçable</span></div>
+        <div class="kpi"><span class="kpi-num">0</span><span class="kpi-lbl">Action perdue de vue</span></div>
+        <div class="kpi"><span class="kpi-num">100%</span><span class="kpi-lbl">Traçable &amp; auditable</span></div>
       </div>
     </div>
 
@@ -461,9 +455,9 @@
       <div class="ba-teaser">
         <div class="ba-side ba-before">
           <div class="ba-h"><span class="ba-dot"></span> Avant · le tableur</div>
-          <div class="ba-line"><span class="ic">✕</span> Erreurs invisibles</div>
-          <div class="ba-line"><span class="ic">✕</span> 3 versions du fichier</div>
-          <div class="ba-line"><span class="ic">✕</span> Perte de données</div>
+          <div class="ba-line"><span class="ic">✕</span> Actions noyées dans les onglets</div>
+          <div class="ba-line"><span class="ic">✕</span> Qui pilote quoi ?</div>
+          <div class="ba-line"><span class="ic">✕</span> Retards invisibles</div>
           <div class="ba-line"><span class="ic">✕</span> Aucune traçabilité</div>
         </div>
         <div class="ba-arrow" aria-hidden="true">
@@ -471,10 +465,10 @@
         </div>
         <div class="ba-side ba-after">
           <div class="ba-h"><span class="ba-dot"></span> Après · Pilotaction</div>
-          <div class="ba-line"><span class="ic">✓</span> Données validées</div>
-          <div class="ba-line"><span class="ic">✓</span> Une seule référence</div>
+          <div class="ba-line"><span class="ic">✓</span> Chaque action pilotée</div>
+          <div class="ba-line"><span class="ic">✓</span> Pilote &amp; échéance clairs</div>
+          <div class="ba-line"><span class="ic">✓</span> Alertes de retard</div>
           <div class="ba-line"><span class="ic">✓</span> Historique complet</div>
-          <div class="ba-line"><span class="ic">✓</span> Collaboration temps réel</div>
         </div>
       </div>
     </div>
@@ -486,7 +480,7 @@
   <div class="stats-band-inner">
     <div class="stat-item reveal"><div class="stat-num">−90%</div><div class="stat-label">d'erreurs de saisie</div></div>
     <div class="stat-item reveal d1"><div class="stat-num">100%</div><div class="stat-label">des actions tracées</div></div>
-    <div class="stat-item reveal d2"><div class="stat-num">0</div><div class="stat-label">perte de données</div></div>
+    <div class="stat-item reveal d2"><div class="stat-num">0</div><div class="stat-label">échéance oubliée</div></div>
     <div class="stat-item reveal d3"><div class="stat-num">×3</div><div class="stat-label">plus rapide à consolider</div></div>
   </div>
 </div>
@@ -495,17 +489,16 @@
 <section class="section" id="excel" data-scene>
   <div class="section-inner">
     <div class="split" data-io>
-      <!-- Fenêtre Excel -->
       <div class="win-shell">
         <div class="window">
           <div class="win-bar">
             <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-            <span class="win-file">Suivi_Projets_2024_v3_FINAL_(2)_corrigé_ok.xlsx</span>
+            <span class="win-file">Plan_actions_2026_v3_FINAL_(2)_corrigé_ok.xlsx</span>
           </div>
           <div class="xl">
             <div class="xl-ribbon">
-              <span class="tab active">Feuil1</span>
-              <span class="tab">Feuil2 (copie)</span>
+              <span class="tab active">Plan RH</span>
+              <span class="tab">Plan CRM (copie)</span>
               <span class="tab">Sauvegarde</span>
               <span class="tab">NE PAS TOUCHER</span>
             </div>
@@ -514,39 +507,38 @@
         </div>
         <div class="toast t1"><span class="pip"></span> #REF! — formule cassée</div>
         <div class="toast t2"><span class="pip"></span> 3 versions du fichier en circulation</div>
-        <div class="toast t3"><span class="pip"></span> Ligne supprimée par erreur</div>
+        <div class="toast t3"><span class="pip"></span> Action supprimée par erreur</div>
       </div>
 
-      <!-- Points de douleur -->
       <div>
         <span class="section-label rose reveal">Le monde d'avant</span>
-        <h2 class="reveal d1" style="font-size:clamp(1.6rem,2.9vw,2.3rem);margin-bottom:.9rem;">Un tableur, mille problèmes.</h2>
+        <h2 class="reveal d1" style="margin-bottom:.9rem;">Un tableur, mille actions… <br>et autant de trous dans la raquette.</h2>
         <p class="lead reveal d2" style="margin-bottom:1.75rem;">
-          Au début, ça tient. Puis les colonnes se multiplient, les copies circulent par mail,
-          et plus personne ne sait quelle version fait foi.
+          Au début, ça tient. Puis les onglets se multiplient, les copies circulent par mail,
+          et une action corrective se perd entre deux lignes — jusqu'à l'audit.
         </p>
         <div class="pains">
           <div class="pain reveal d1"><span class="x"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></span>
-            <div><b>Erreurs invisibles</b><span>Une cellule écrasée, une formule décalée… et le chiffre est faux sans que personne ne le voie.</span></div></div>
+            <div><b>Des actions qui passent à la trappe</b><span>Noyées dans les onglets, certaines actions ne sont jamais clôturées — ni même relancées.</span></div></div>
           <div class="pain reveal d2"><span class="x"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></span>
-            <div><b>Guerre des versions</b><span>« v3_FINAL_(2) », copies par mail : impossible de savoir laquelle est la bonne.</span></div></div>
+            <div><b>Qui pilote quoi, pour quand ?</b><span>Pilote, échéance, avancement : c'est flou, et personne n'est vraiment responsable.</span></div></div>
           <div class="pain reveal d3"><span class="x"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></span>
-            <div><b>Perte de données</b><span>Un mauvais clic, un fichier non enregistré, et des heures de travail disparaissent.</span></div></div>
+            <div><b>Les retards se découvrent trop tard</b><span>Aucune alerte : on réalise qu'une action est en retard le jour de la revue.</span></div></div>
           <div class="pain reveal d4"><span class="x"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></span>
-            <div><b>Aucune traçabilité</b><span>Qui a modifié quoi, quand, pourquoi ? Personne ne peut le dire.</span></div></div>
+            <div><b>Aucune traçabilité, pas de revue d'efficacité</b><span>Qui a modifié quoi, quand ? L'action a-t-elle été efficace ? Impossible à prouver en audit.</span></div></div>
           <div class="pain reveal d5"><span class="x"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></span>
-            <div><b>Collaboration bloquée</b><span>« Ferme le fichier, je dois l'ouvrir. » À plusieurs, tout se grippe.</span></div></div>
+            <div><b>Collaboration &amp; versions ingérables</b><span>« Ferme le fichier, je dois l'ouvrir. » Copies par mail, données écrasées, erreurs invisibles.</span></div></div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===================== TRANSITION (navy) ===================== -->
+<!-- ===================== TRANSITION ===================== -->
 <section class="section section-dark center" data-scene>
   <div class="section-inner">
     <span class="section-label on-dark reveal" style="justify-content:center;">Le déclic</span>
-    <h2 class="reveal d1" style="max-width:20ch;margin:.4rem auto 0;font-size:clamp(1.7rem,3vw,2.4rem);">
+    <h2 class="reveal d1" style="max-width:22ch;margin:.4rem auto 0;font-size:clamp(1.7rem,3vw,2.4rem);">
       Et si le problème n'était pas votre équipe… <span style="color:#5fb4d4;">mais votre outil ?</span>
     </h2>
   </div>
@@ -557,52 +549,53 @@
   <div class="section-inner">
     <div class="center" style="margin-bottom:48px;">
       <span class="section-label reveal" style="justify-content:center;">Le modèle Pilotaction</span>
-      <h2 class="reveal d1" style="max-width:20ch;margin:.4rem auto .8rem;">Le même travail. <span style="color:var(--teal);">Dix fois plus clair.</span></h2>
+      <h2 class="reveal d1" style="max-width:22ch;margin:.4rem auto .8rem;">Vos plans d'actions, <span style="color:var(--teal);">enfin sous contrôle.</span></h2>
       <p class="lead reveal d2">
-        Pilotaction remplace le tableur par une vraie application de pilotage : données structurées,
-        collaboration en temps réel, historique complet.
+        Pilotaction remplace le tableur par une vraie application de pilotage : actions structurées,
+        pilotes responsabilisés, alertes automatiques et traçabilité complète.
       </p>
     </div>
 
-    <!-- Maquette de l'app -->
     <div class="win-shell reveal" data-io>
       <div class="app">
         <div class="app-top">
           <div class="app-logo">
-            <span class="lm" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20V10M9 20V4M14 20v-7M19 20V8" stroke="#fff" stroke-width="2.8" stroke-linecap="round"/></svg></span>
-            Pilotaction
+            <span class="lm" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="2"/><circle cx="12" cy="12" r="4.5" stroke="#fff" stroke-width="2"/><circle cx="12" cy="12" r="1.3" fill="#fff"/></svg></span>
+            <span>Pilotaction<small>Pilotage de plans d'actions</small></span>
           </div>
           <div class="app-search">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            Rechercher un projet, une tâche, une personne…
+            Rechercher un plan, une action, un pilote…
           </div>
           <span class="app-live"><span class="d"></span> 3 en ligne</span>
           <div class="avatars">
-            <span style="background:#6ba5f7">CD</span>
-            <span style="background:#5fd0e6">ML</span>
-            <span style="background:#4ade80">ST</span>
+            <span style="background:#6ba5f7">SM</span>
+            <span style="background:#5fd0e6">LD</span>
+            <span style="background:#4ade80">JM</span>
           </div>
         </div>
         <div class="app-body">
           <aside class="app-side">
+            <div class="side-h">Navigation</div>
             <div class="nav-i active"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M4 13h6V4H4v9zm10 7h6v-9h-6v9zM4 20h6v-4H4v4zM14 4v5h6V4h-6z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span>Tableau de bord</span></div>
-            <div class="nav-i"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Projets</span></div>
-            <div class="nav-i"><svg class="ic" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M4 19c0-3 2-5 5-5s5 2 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Équipe</span></div>
-            <div class="nav-i"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span>Droits &amp; rôles</span></div>
-            <div class="nav-i"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 4a5 5 0 00-5 5c0 4-2 5-2 5h14s-2-1-2-5a5 5 0 00-5-5zM10 19a2 2 0 004 0" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span>Alertes</span></div>
+            <div class="nav-i"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M9 6h11M9 12h11M9 18h7M4 6h.01M4 12h.01M4 18h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Plans d'actions</span></div>
+            <div class="nav-i"><svg class="ic" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.8"/><path d="M5.5 20c0-3.4 2.9-6 6.5-6s6.5 2.6 6.5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Mes actions</span></div>
+            <div class="nav-i"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 4a5 5 0 00-5 5c0 4-2 5-2 5h14s-2-1-2-5a5 5 0 00-5-5zM10 19a2 2 0 004 0" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span>Notifications</span></div>
+            <div class="nav-i"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span>Équipe &amp; Rôles</span></div>
             <div class="nav-i"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M5 19V5m0 14l4-3 4 2 6-5M9 16V9m4 9V11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Rapports</span></div>
           </aside>
           <main class="app-main">
             <div class="mini-dash">
-              <div class="mini-kpi"><div class="ml">Projets à l'heure</div><div class="mv teal" data-count="94" data-suffix="%">0%</div><div class="mbar" style="--w:94%"><span></span></div></div>
-              <div class="mini-kpi"><div class="ml">Données fiabilisées</div><div class="mv green" data-count="100" data-suffix="%">0%</div><div class="mbar" style="--w:100%"><span></span></div></div>
-              <div class="mini-kpi"><div class="ml">Écarts détectés</div><div class="mv" data-count="0" data-suffix="">0</div><div class="mbar" style="--w:8%"><span></span></div></div>
+              <div class="mini-kpi"><div class="ml">Avancement moyen</div><div class="mv teal" data-count="74" data-suffix="%">0%</div><div class="mbar" style="--w:74%"><span></span></div></div>
+              <div class="mini-kpi"><div class="ml">Actions à l'heure</div><div class="mv green" data-count="92" data-suffix="%">0%</div><div class="mbar" style="--w:92%"><span></span></div></div>
+              <div class="mini-kpi"><div class="ml">Actions en retard</div><div class="mv amber" data-count="3" data-suffix="">0</div><div class="mbar a" style="--w:14%"><span></span></div></div>
             </div>
             <div class="dtable" id="pTable">
-              <div class="th"><div>Projet</div><div>Statut</div><div>Échéance</div><div></div></div>
-              <div class="tr"><div>Refonte site vitrine</div><div><span class="pill ok">● Terminé</span></div><div>12 juin</div><div class="who" style="background:#5fd0e6">ML</div></div>
-              <div class="tr"><div>Migration CRM</div><div><span class="pill run">● En cours</span></div><div>28 juil.</div><div class="who" style="background:#6ba5f7">CD</div></div>
-              <div class="tr"><div>Campagne Q3</div><div><span class="pill late">● À suivre</span></div><div>05 août</div><div class="who" style="background:#4ade80">ST</div></div>
+              <div class="th"><div>Plan d'actions</div><div>Statut</div><div>Avanct</div><div></div></div>
+              <div class="tr"><div>Transformation digitale RH</div><div><span class="pill run">● En cours</span></div><div class="av">45%</div><div class="who" style="background:#6ba5f7">SM</div></div>
+              <div class="tr"><div>Optimisation supply chain</div><div><span class="pill run">● En cours</span></div><div class="av">68%</div><div class="who" style="background:#5fd0e6">LD</div></div>
+              <div class="tr"><div>Déploiement CRM Salesforce</div><div><span class="pill late">● En retard</span></div><div class="av">30%</div><div class="who" style="background:#4ade80">JM</div></div>
+              <div class="tr"><div>Formation cybersécurité</div><div><span class="pill ok">● Terminé</span></div><div class="av">100%</div><div class="who" style="background:#a78bfa">TP</div></div>
             </div>
           </main>
         </div>
@@ -613,14 +606,13 @@
       </div>
     </div>
 
-    <!-- Bénéfices -->
     <div class="benefits" style="margin-top:44px;" data-io>
-      <div class="ben reveal d1"><span class="v"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Données structurées &amp; validées</b><span>Chaque champ est contrôlé à la saisie. Fini les erreurs invisibles.</span></div></div>
-      <div class="ben reveal d1"><span class="v"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Historique complet</b><span>Qui, quoi, quand : chaque modification est tracée et réversible.</span></div></div>
-      <div class="ben reveal d2"><span class="v"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Collaboration temps réel</b><span>Toute l'équipe sur la même donnée, sans conflit de versions.</span></div></div>
-      <div class="ben reveal d2"><span class="v"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Droits &amp; rôles fins</b><span>Chacun voit et modifie exactement ce qu'il doit. Rien de plus.</span></div></div>
-      <div class="ben reveal d3"><span class="v"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Alertes automatiques</b><span>Un écart, un retard, un dépassement ? Vous êtes prévenu à temps.</span></div></div>
-      <div class="ben reveal d3"><span class="v"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Zéro perte de données</b><span>Tout est sauvegardé et versionné en continu, automatiquement.</span></div></div>
+      <div class="ben reveal d1"><span class="v"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Actions &amp; sous-actions structurées</b><span>Type (corrective, préventive…), processus, risque, cause : chaque action est cadrée.</span></div></div>
+      <div class="ben reveal d1"><span class="v"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Pilote, échéance &amp; avancement</b><span>On sait qui fait quoi, pour quand, et où ça en est — en un coup d'œil.</span></div></div>
+      <div class="ben reveal d2"><span class="v"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Relances &amp; alertes automatiques</b><span>Échéance qui approche, action en retard, validation attendue : chacun est relancé au bon moment.</span></div></div>
+      <div class="ben reveal d2"><span class="v"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Revue d'efficacité intégrée</b><span>Bouclez la boucle qualité : chaque action est évaluée une fois clôturée. Idéal pour vos audits.</span></div></div>
+      <div class="ben reveal d3"><span class="v"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Droits par rôle</b><span>Admin, manager, collaborateur : chacun accède exactement à ce qui le concerne.</span></div></div>
+      <div class="ben reveal d3"><span class="v"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Tableaux de bord &amp; historique</b><span>Indicateurs en temps réel, export PDF/CSV, et chaque modification tracée et réversible.</span></div></div>
     </div>
   </div>
 </section>
@@ -630,7 +622,7 @@
   <div class="section-inner">
     <div class="center">
       <span class="section-label reveal" style="justify-content:center;">Face à face</span>
-      <h2 class="reveal d1" style="max-width:20ch;margin:.4rem auto 0;">Tableur Excel <span style="color:var(--gray-soft);font-weight:600;">vs</span> Pilotaction</h2>
+      <h2 class="reveal d1" style="max-width:22ch;margin:.4rem auto 0;">Tableur Excel <span style="color:var(--gray-soft);font-weight:600;">vs</span> Pilotaction</h2>
     </div>
     <div class="compare-wrap reveal d2" data-io>
       <table class="compare-table">
@@ -653,7 +645,7 @@
     <div class="cta-block" data-io>
       <span class="section-label on-dark reveal">Passez au pilotage</span>
       <h2 class="reveal d1">Du chaos du tableur au pilotage maîtrisé.</h2>
-      <p class="reveal d2">Découvrez Pilotaction sur vos propres projets. On vous montre, en 20 minutes, ce que vous gagnez à quitter Excel.</p>
+      <p class="reveal d2">Découvrez Pilotaction sur vos propres plans d'actions. On vous montre, en 20 minutes, ce que vous gagnez à quitter Excel.</p>
       <div class="btn-row reveal d3">
         <a class="btn-primary" href="mailto:contact@synappli.com?subject=Démo%20Pilotaction">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
@@ -669,14 +661,13 @@
 <footer>
   <div class="footer-inner">
     <a class="site-logo" href="#top">
-      <span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20V10M9 20V4M14 20v-7M19 20V8" stroke="#fff" stroke-width="2.8" stroke-linecap="round"/></svg></span>
+      <span class="s-logo" style="width:28px;height:34px;"><svg viewBox="0 0 200 240" fill="currentColor" aria-hidden="true"><use href="#synappli-mark"/></svg></span>
       <span class="logo-wordmark">Synappli <span>· Pilotaction</span></span>
     </a>
-    <div>© 2026 Synappli — Le pilotage, enfin sous contrôle.</div>
+    <div>© 2026 Synappli — Le pilotage de plans d'actions, enfin sous contrôle.</div>
   </div>
 </footer>
 
-<!-- auto-demo indicator -->
 <div class="demo-flag" id="demoFlag">
   <span class="pl"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Démonstration en cours…</span>
   <span class="stop" id="demoStop">Arrêter</span>
@@ -687,32 +678,30 @@
   "use strict";
   var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  /* ---------- Scrubber ---------- */
   var scrubber = document.getElementById("scrubber");
   function onScroll() {
     var h = document.documentElement;
     var max = h.scrollHeight - h.clientHeight;
-    var p = max > 0 ? h.scrollTop / max : 0;
-    scrubber.style.width = (p * 100).toFixed(2) + "%";
+    scrubber.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0).toFixed(2) + "%";
   }
   window.addEventListener("scroll", onScroll, { passive: true });
   onScroll();
 
-  /* ---------- Grille Excel (volontairement chaotique) ---------- */
+  /* ---------- Faux Excel : un plan d'actions qui part en vrille ---------- */
   var xlGrid = document.getElementById("xlGrid");
   if (xlGrid) {
-    ["", "A", "B", "C", "D", "E", "F"].forEach(function (c) {
+    ["", "N°", "Action", "Pilote", "Échéance", "Statut", "Av."].forEach(function (c) {
       var d = document.createElement("div"); d.className = "c head"; d.textContent = c; xlGrid.appendChild(d);
     });
     var rows = [
-      ["Projet Alpha", "12 000", "=B2*1,2", "OK", "Marie", "#REF!"],
-      ["Projet Beta", "8 500", "#VALUE!", "En retard", "", "230"],
-      ["Projet Gamma", "", "=B4/C4", "#DIV/0!", "Jean", "?"],
-      ["Projet Delta", "15 000", "18 0OO", "OK", "Marie", "=SOMME(B:B"],
-      ["Projet Epsilon", "9 200", "11 040", "annulé", "sophie", "402"],
-      ["Projet Zeta", "6 000", "#REF!", "OK", "", "180"],
+      ["ACT-001", "Cartographier process RH", "Marie", "15/02", "Terminé", "100%"],
+      ["ACT-002", "Benchmark SIRH", "", "28/02", "#REF!", "100"],
+      ["ACT-003", "Specs fonctionnelles", "Jean", "15/03", "?", "=E4"],
+      ["ACT-004", "Appel d'offres", "Marie", "31/O3", "En retar", "#VALUE!"],
+      ["ACT-005", "Paramétrage outil", "sophie", "15/04", "OK", "100"],
+      ["ACT-006", "Migration paie", "", "#REF!", "En cours", "60%"],
       ["", "", "", "", "", ""],
-      ["Projet Eta", "22 000", "=B9*C9", "doublon?", "Marie", "#NAME?"]
+      ["ACT-008", "Tests d'intégration", "Marie", "30/05", "doublon?", "#NAME?"]
     ];
     var errFlags = { "#REF!": 1, "#VALUE!": 1, "#DIV/0!": 1, "#NAME?": 1 };
     rows.forEach(function (r, ri) {
@@ -721,26 +710,25 @@
       r.forEach(function (val, ci) {
         var d = document.createElement("div"); d.className = "c";
         if (errFlags[val]) d.className += " err";
-        if (val === "18 0OO" || val === "=SOMME(B:B" || val === "?" || val === "doublon?") d.className += " warn";
-        if (val === "annulé") d.className += " strike";
-        if (ci === 2 && ri === 0) d.className += " flash";
+        if (val === "?" || val === "doublon?" || val === "31/O3" || val === "=E4" || val === "En retar") d.className += " warn";
+        if (ci === 4 && ri === 0) d.className += " flash";
         if (ghost) d.className += " ghostrow";
         d.textContent = val; xlGrid.appendChild(d);
       });
     });
   }
 
-  /* ---------- Lignes du tableau comparatif ---------- */
+  /* ---------- Tableau comparatif ---------- */
   var cData = [
-    ["Fiabilité des données", "Erreurs invisibles, saisie libre", "Champs validés à la saisie"],
-    ["Versions", "v3_FINAL_(2), copies par mail", "Une seule source de vérité"],
-    ["Traçabilité", "Aucune — impossible à auditer", "Journal complet : qui, quoi, quand"],
-    ["Collaboration", "Le fichier se verrouille / s'écrase", "Temps réel, multi-utilisateurs"],
-    ["Droits d'accès", "Tout le monde voit tout", "Rôles & permissions fines"],
-    ["Perte de données", "Un clic suffit pour tout perdre", "Sauvegarde & versioning continus"],
-    ["Alertes", "On découvre les problèmes trop tard", "Alertes automatiques sur les écarts"],
-    ["Pilotage", "Consolidation manuelle, laborieuse", "Tableaux de bord en temps réel"],
-    ["Passage à l'échelle", "S'effondre au-delà de quelques onglets", "Conçu pour grandir avec vous"]
+    ["Suivi des actions", "Noyées dans les onglets", "Chaque action pilotée, au même endroit"],
+    ["Pilote & échéance", "Flous, pas de responsable clair", "Assignés, suivis et responsabilisés"],
+    ["Retards", "Découverts le jour de la revue", "Relances & alertes automatiques"],
+    ["Revue d'efficacité", "Rarement formalisée", "Intégrée à chaque action clôturée"],
+    ["Traçabilité", "Aucune — inauditable", "Journal complet : qui, quoi, quand"],
+    ["Droits d'accès", "Tout le monde voit tout", "Rôles Admin / Manager / Collaborateur"],
+    ["Fiabilité des données", "v3_FINAL_(2), erreurs invisibles", "Une source de vérité, champs validés"],
+    ["Reporting", "Consolidation manuelle, laborieuse", "Tableaux de bord & export en 1 clic"],
+    ["Passage à l'échelle", "S'effondre au-delà de quelques onglets", "Conçu pour des dizaines de plans"]
   ];
   var body = document.getElementById("compareBody");
   if (body) {
@@ -758,10 +746,10 @@
 
   /* ---------- Journal d'activité ---------- */
   var logEntries = [
-    ['<b>Marie</b> a validé <span class="tk">Refonte site</span>', "il y a 2 min"],
-    ['<b>CD</b> a mis à jour <span class="tk">Migration CRM</span>', "il y a 5 min"],
-    ['<b>Système</b> a sauvegardé <span class="tk">v.1284</span>', "il y a 6 min"],
-    ['<b>Sophie</b> a créé <span class="tk">Campagne Q3</span>', "il y a 9 min"]
+    ['<b>Sophie</b> a validé <span class="tk">ACT-004</span>', "il y a 2 min"],
+    ['<span class="rd">Retard détecté</span> sur <span class="tk">ACT-C05</span>', "il y a 4 min"],
+    ['<b>Marc</b> a mis à jour <span class="tk">Supply chain</span>', "il y a 6 min"],
+    ['<b>Système</b> a sauvegardé <span class="tk">v.1284</span>', "il y a 6 min"]
   ];
   var logRows = document.getElementById("logRows");
   if (logRows) {
@@ -790,7 +778,7 @@
   }, { threshold: 0.15 });
   document.querySelectorAll(".reveal").forEach(function (el) { if (!el.closest("[data-io]")) io2.observe(el); });
 
-  /* ---------- Compteurs + ligne collaborative ---------- */
+  /* ---------- Compteurs + action ajoutée en direct ---------- */
   var appEl = document.querySelector(".app");
   var counted = false;
   if (appEl) {
@@ -819,7 +807,7 @@
               if (!t) return;
               var row = document.createElement("div");
               row.className = "tr fresh";
-              row.innerHTML = '<div>Onboarding client</div><div><span class="pill run">● En cours</span></div><div>19 août</div><div class="who" style="background:#4ade80">ML</div>';
+              row.innerHTML = '<div>Audit qualité ISO 9001</div><div><span class="pill plan">● Planifié</span></div><div class="av">0%</div><div class="who" style="background:#4ade80">JM</div>';
               t.appendChild(row);
             }, 1400);
           }
@@ -837,7 +825,6 @@
   var demoStop = document.getElementById("demoStop");
   var demoTimers = [];
   var demoRunning = false;
-
   function clearDemo() { demoTimers.forEach(clearTimeout); demoTimers = []; demoRunning = false; demoFlag.classList.remove("show"); }
   function stopOnUserScroll() { if (demoRunning) clearDemo(); }
   function runDemo() {

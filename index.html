@@ -43,7 +43,7 @@
   }
 
   *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
-  html { scroll-behavior:smooth; -webkit-text-size-adjust:100%; }
+  html { scroll-behavior:smooth; -webkit-text-size-adjust:100%; scroll-padding-top:var(--nav-h); }
   body {
     font-family:var(--font); font-size:17px; line-height:1.7; color:var(--text);
     background:var(--white); -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
@@ -130,6 +130,14 @@
   .section-dark .lead { color:rgba(255,255,255,.7); }
   .center { text-align:center; }
   .center .lead { margin-left:auto; margin-right:auto; }
+
+  /* Délimitation "page par page" : chaque scène occupe au moins un plein écran,
+     avec accroche de défilement douce (proximity) sur grand écran. */
+  [data-scene] { min-height:100vh; display:flex; flex-direction:column; justify-content:center; }
+  @media (min-width:961px) {
+    html { scroll-snap-type:y proximity; }
+    [data-scene] { scroll-snap-align:start; scroll-snap-stop:always; }
+  }
 
   .reveal { opacity:0; transform:translateY(16px); transition:opacity .6s ease,transform .6s ease; }
   .reveal.in-view { opacity:1; transform:none; }
@@ -401,9 +409,9 @@
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <g id="synappli-mark">
-      <path d="M170 66 C168 38 140 20 106 24 C60 29 26 66 30 112 C32 138 48 152 70 151 C58 146 50 132 49 116 C47 82 74 55 108 54 C133 53 150 66 152 86 C160 82 168 76 170 66 Z"/>
-      <path transform="rotate(180 100 120)" d="M170 66 C168 38 140 20 106 24 C60 29 26 66 30 112 C32 138 48 152 70 151 C58 146 50 132 49 116 C47 82 74 55 108 54 C133 53 150 66 152 86 C160 82 168 76 170 66 Z"/>
-      <circle cx="100" cy="120" r="21"/>
+      <path d="M79 153 C45 153 21 129 21 99 C21 59 55 29 99 28 C133 27 155 39 163 43 C175 43 183 52 183 65 C183 83 170 93 153 90 C151 73 133 61 108 61 C81 61 56 83 56 112 C56 132 64 147 79 153 Z"/>
+      <path transform="rotate(180 100 125)" d="M79 153 C45 153 21 129 21 99 C21 59 55 29 99 28 C133 27 155 39 163 43 C175 43 183 52 183 65 C183 83 170 93 153 90 C151 73 133 61 108 61 C81 61 56 83 56 112 C56 132 64 147 79 153 Z"/>
+      <circle cx="100" cy="125" r="22"/>
     </g>
   </defs>
 </svg>
@@ -412,7 +420,7 @@
 <header id="nav">
   <div class="nav-inner">
     <a class="site-logo" href="#top">
-      <span class="s-logo"><svg viewBox="0 0 200 240" fill="currentColor" aria-hidden="true"><use href="#synappli-mark"/></svg></span>
+      <span class="s-logo"><svg viewBox="0 0 200 250" fill="currentColor" aria-hidden="true"><use href="#synappli-mark"/></svg></span>
       <span class="logo-wordmark">Synappli <span>· Pilotaction</span><small>Pilotage de plans d'actions</small></span>
     </a>
     <nav class="nav-menu">
@@ -474,16 +482,6 @@
     </div>
   </div>
 </section>
-
-<!-- ===================== STATS BAND ===================== -->
-<div class="stats-band section-bg" data-io>
-  <div class="stats-band-inner">
-    <div class="stat-item reveal"><div class="stat-num">−90%</div><div class="stat-label">d'erreurs de saisie</div></div>
-    <div class="stat-item reveal d1"><div class="stat-num">100%</div><div class="stat-label">des actions tracées</div></div>
-    <div class="stat-item reveal d2"><div class="stat-num">0</div><div class="stat-label">échéance oubliée</div></div>
-    <div class="stat-item reveal d3"><div class="stat-num">×3</div><div class="stat-label">plus rapide à consolider</div></div>
-  </div>
-</div>
 
 <!-- ===================== EXCEL — LE MONDE D'AVANT ===================== -->
 <section class="section" id="excel" data-scene>
@@ -661,7 +659,7 @@
 <footer>
   <div class="footer-inner">
     <a class="site-logo" href="#top">
-      <span class="s-logo" style="width:28px;height:34px;"><svg viewBox="0 0 200 240" fill="currentColor" aria-hidden="true"><use href="#synappli-mark"/></svg></span>
+      <span class="s-logo" style="width:28px;height:34px;"><svg viewBox="0 0 200 250" fill="currentColor" aria-hidden="true"><use href="#synappli-mark"/></svg></span>
       <span class="logo-wordmark">Synappli <span>· Pilotaction</span></span>
     </a>
     <div>© 2026 Synappli — Le pilotage de plans d'actions, enfin sous contrôle.</div>

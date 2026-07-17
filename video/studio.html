@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Pilotaction — Studio vidéo</title>
+<link rel="stylesheet" href="fonts.css" />
+<style>
+  /* =====================================================================
+     STUDIO VIDÉO PILOTACTION — 1920×1080, rendu image par image.
+     Toute la vidéo est une fonction pure du temps : window.seek(tMs).
+     AUCUNE transition/animation CSS — tout est calculé en JS (idempotent).
+     ===================================================================== */
+  :root {
+    --navy:#1a2035; --navy2:#232b42;
+    --blue:#2e5be8; --teal:#046c91; --teal-d:#03587a; --teal-l:#d9e8ef;
+    --off:#eaf0f8; --gray:#4a5060; --light:#ced8e6;
+    --bad:#c53a4b; --bad-l:#fdecee; --ok:#0f9d58;
+    --font:'Inter',sans-serif; --display:'Archivo',sans-serif;
+    --mono:'IBM Plex Mono',monospace; --app-font:'Outfit',sans-serif;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { width:1920px; height:1080px; overflow:hidden; background:#000; }
+  body { font-family:var(--font); -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+  #stage { position:relative; width:1920px; height:1080px; overflow:hidden; background:#fff; }
+  .scene { position:absolute; inset:0; opacity:0; }
+  .bg-light {
+    background:
+      radial-gradient(ellipse at 72% 0, rgba(4,108,145,.08) 0, transparent 55%),
+      radial-gradient(ellipse at 8% 100%, rgba(46,91,232,.05) 0, transparent 50%),
+      linear-gradient(180deg,#f0f5fa 0,#fafbfd 70%,#fff 100%);
+  }
+  .bg-navy { background:linear-gradient(135deg,#1a2035 0,#232b42 60%,#1c2440 100%); }
+
+  /* ---------- Curseur ---------- */
+  #cursor { position:absolute; z-index:900; width:56px; height:56px; opacity:0; will-change:transform; }
+  #cursor svg { display:block; filter:drop-shadow(0 4px 10px rgba(0,0,0,.35)); }
+  .ripple { position:absolute; z-index:890; border:4px solid rgba(4,108,145,.85); border-radius:50%;
+            transform:translate(-50%,-50%); opacity:0; pointer-events:none; }
+  .ripple.dark { border-color:rgba(107,165,247,.9); }
+
+  /* ---------- Cartons (callouts) ---------- */
+  .callout { position:absolute; z-index:800; display:flex; align-items:center; gap:18px;
+             background:#fff; border:1px solid var(--light); border-radius:14px;
+             padding:22px 30px; box-shadow:0 24px 60px -14px rgba(26,32,53,.35); opacity:0; }
+  .callout .ic { flex:none; width:46px; height:46px; border-radius:12px; display:grid; place-items:center; }
+  .callout .ic svg { width:26px; height:26px; }
+  .callout.red .ic { background:var(--bad-l); color:var(--bad); }
+  .callout.green .ic { background:var(--teal-l); color:var(--teal-d); }
+  .callout b { display:block; font-size:26px; color:var(--navy); font-family:var(--display); letter-spacing:-.01em; }
+  .callout span { display:block; font-size:19px; color:var(--gray); margin-top:3px; }
+
+  /* =====================================================================
+     S0 — INTRO
+     ===================================================================== */
+  #s0 .wrap { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; }
+  #s0 .logo { width:150px; height:188px; color:var(--teal); }
+  #s0 .logo svg { width:100%; height:100%; }
+  #s0 .presente { margin-top:34px; font-size:22px; font-weight:700; letter-spacing:.24em; text-transform:uppercase; color:var(--teal); }
+  #s0 h1 { margin-top:14px; font-family:var(--display); font-weight:800; font-size:110px; letter-spacing:-.02em; color:var(--navy); }
+  #s0 .sub { margin-top:16px; font-size:30px; color:var(--gray); }
+  #s0 .halo { position:absolute; left:50%; top:50%; width:1200px; height:1200px; transform:translate(-50%,-50%);
+              background:radial-gradient(circle, rgba(4,108,145,.10) 0, transparent 60%); }
+
+  /* =====================================================================
+     S1 — EXCEL
+     ===================================================================== */
+  #s1 .cam { position:absolute; inset:0; will-change:transform; }
+  #s1 .window { position:absolute; left:130px; top:70px; width:1660px; border-radius:14px; overflow:hidden;
+                border:1px solid #c9d1de; box-shadow:0 40px 110px -30px rgba(26,32,53,.45); background:#fff; }
+  #s1 .win-bar { display:flex; align-items:center; gap:10px; padding:16px 20px; background:#E7E9EE; border-bottom:1px solid #cfd3dc; }
+  #s1 .dot { width:15px; height:15px; border-radius:50%; }
+  #s1 .dot.r{background:#FF5F57} #s1 .dot.y{background:#FEBC2E} #s1 .dot.g{background:#28C840}
+  #s1 .win-file { margin-left:14px; font-size:17px; color:#5c6270; font-family:var(--mono); }
+  #s1 .ribbon { display:flex; align-items:center; background:#107C41; height:44px; }
+  #s1 .tab { color:#eafff2; font-size:16.5px; padding:0 22px; height:100%; display:flex; align-items:center; font-weight:600; }
+  #s1 .tab.active { background:#fff; color:#0B5A2F; }
+  #s1 .grid { display:grid; grid-template-columns:52px .55fr 1.7fr .8fr .8fr .9fr .6fr 1.2fr; font-size:16.5px; font-family:var(--mono); }
+  #s1 .c { border-right:1px solid #E6E8EC; border-bottom:1px solid #E6E8EC; padding:11px 13px; min-height:46px;
+           white-space:nowrap; overflow:hidden; text-overflow:ellipsis; background:#fff; color:#2a2f3a; position:relative; }
+  #s1 .c.head { background:#F3F4F7; color:#7b818e; text-align:center; font-weight:700; }
+  #s1 .c.rownum { background:#F3F4F7; color:#7b818e; text-align:center; font-weight:700; }
+  #s1 .c.err { background:var(--bad-l); color:var(--bad); font-weight:700; }
+  #s1 .c.warn { background:#fef6e7; color:#b45309; }
+  #s1 .c.strike { text-decoration:line-through; color:#b9bdc7; }
+  #s1 .row-hl .c { background:#dbe9ff !important; }
+  #s1 .ghost-slot { outline:3px dashed rgba(197,58,75,.65); outline-offset:-4px; }
+  #s1 .files { position:absolute; left:430px; top:172px; z-index:60; display:flex; gap:18px; }
+  #s1 .ghostline { position:absolute; z-index:30; outline:3px dashed rgba(197,58,75,.7); outline-offset:-3px;
+                   border-radius:4px; opacity:0; pointer-events:none; }
+  #s1 .file { display:flex; align-items:center; gap:12px; background:#fff; border:1px solid var(--light);
+              border-radius:12px; padding:14px 20px; box-shadow:0 18px 44px -14px rgba(26,32,53,.4);
+              font-family:var(--mono); font-size:16px; color:var(--navy); opacity:0; }
+  #s1 .file .xl-ic { width:30px; height:30px; border-radius:7px; background:#107C41; color:#fff; display:grid;
+                     place-items:center; font-family:var(--font); font-weight:800; font-size:15px; }
+  #s1 .shade { position:absolute; inset:0; background:#0d1424; opacity:0; }
+  #s1 .painpanel { position:absolute; right:120px; top:210px; width:600px; background:#fff; border-radius:18px;
+                   border:1px solid var(--light); box-shadow:0 40px 100px -20px rgba(13,20,36,.55);
+                   padding:40px 42px; opacity:0; }
+  #s1 .painpanel h3 { font-family:var(--display); font-size:38px; color:var(--navy); letter-spacing:-.015em; margin-bottom:26px; }
+  #s1 .pp-item { display:flex; gap:16px; align-items:flex-start; padding:15px 0; border-top:1px solid #eef2f7; opacity:0; }
+  #s1 .pp-item .x { flex:none; width:36px; height:36px; border-radius:10px; background:var(--bad-l); color:var(--bad);
+                    display:grid; place-items:center; font-weight:800; font-size:19px; }
+  #s1 .pp-item b { font-size:22px; color:var(--navy); display:block; }
+  #s1 .pp-item span { font-size:17px; color:var(--gray); }
+
+  /* =====================================================================
+     S2 — CARTON DÉCLIC
+     ===================================================================== */
+  #s2 .wrap { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+  #s2 .l1 { font-family:var(--display); font-size:64px; font-weight:700; color:#fff; letter-spacing:-.015em; }
+  #s2 .l2 { font-family:var(--display); font-size:76px; font-weight:800; color:#5fb4d4; letter-spacing:-.015em; margin-top:18px; }
+  #s2 .bar { width:64px; height:4px; border-radius:2px; background:#5fb4d4; margin:0 auto 34px; }
+
+  /* =====================================================================
+     S3 — APP PILOTACTION (fidèle App.jsx, thème sombre Outfit)
+     ===================================================================== */
+  #s3 { font-family:var(--app-font); }
+  #s3 .appwrap { position:absolute; left:80px; top:46px; width:1760px; height:988px; border-radius:16px; overflow:hidden;
+                 border:1px solid #1e2438; background:#06080f; box-shadow:0 50px 130px -30px rgba(4,10,25,.8); will-change:transform; }
+  #s3 .side { position:absolute; left:0; top:0; bottom:0; width:280px; background:#0a0d16; border-right:1px solid #1e2438; padding:26px 16px; }
+  #s3 .brand { display:flex; gap:12px; align-items:center; padding:0 8px 22px; border-bottom:1px solid #1e2438; }
+  #s3 .brand .bx { width:44px; height:44px; border-radius:11px; background:linear-gradient(135deg,#3b82f6,#06b6d4); display:grid; place-items:center; }
+  #s3 .brand b { color:#e8ecf4; font-size:21px; font-weight:700; display:block; }
+  #s3 .brand small { color:#5a6480; font-size:13px; display:block; margin-top:1px; }
+  #s3 .nav-h { font-size:12px; font-weight:600; color:#5a6480; text-transform:uppercase; letter-spacing:1.6px; padding:20px 12px 10px; }
+  #s3 .nav-i { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:9px; color:#8892a8; font-size:16.5px; }
+  #s3 .nav-i svg { width:20px; height:20px; flex:none; }
+  #s3 .nav-i.on { background:rgba(59,130,246,.15); color:#60a5fa; font-weight:600; }
+  #s3 .userbox { position:absolute; left:16px; right:16px; bottom:18px; display:flex; gap:11px; align-items:center;
+                 background:#0f1320; border-radius:10px; padding:10px 12px; }
+  #s3 .av { border-radius:50%; display:grid; place-items:center; color:#fff; font-weight:600; flex:none; }
+  #s3 .userbox b { color:#e8ecf4; font-size:15px; display:block; }
+  #s3 .userbox small { color:#5a6480; font-size:12.5px; }
+  #s3 .main { position:absolute; left:280px; right:0; top:0; bottom:0; }
+  #s3 .hdr { display:flex; align-items:center; justify-content:space-between; padding:24px 36px; border-bottom:1px solid #1e2438; }
+  #s3 .hdr h2 { color:#e8ecf4; font-size:29px; font-weight:700; letter-spacing:-.3px; }
+  #s3 .hdr p { color:#8892a8; font-size:15.5px; margin-top:3px; }
+  #s3 .hdr-right { display:flex; align-items:center; gap:16px; }
+  #s3 .btn-exp { display:flex; align-items:center; gap:9px; background:#0f1320; border:1px solid #2a3150; color:#c3ccdf;
+                 font-size:15.5px; font-weight:500; padding:11px 18px; border-radius:9px; font-family:var(--app-font); }
+  #s3 .bell { position:relative; width:46px; height:46px; border-radius:10px; background:#0f1320; border:1px solid #1e2438;
+              display:grid; place-items:center; color:#8892a8; }
+  #s3 .bell .bdg { position:absolute; top:-5px; right:-5px; min-width:22px; height:22px; border-radius:11px; background:#ef4444;
+                   color:#fff; font-size:13px; font-weight:700; display:grid; place-items:center; padding:0 5px; }
+  #s3 .view { position:absolute; left:0; right:0; top:95px; bottom:0; padding:28px 36px; opacity:0; }
+  /* dashboard */
+  #s3 .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; }
+  #s3 .kpi { background:#0f1320; border:1px solid #1e2438; border-radius:14px; padding:22px 24px; }
+  #s3 .kpi .ic { width:46px; height:46px; border-radius:11px; display:grid; place-items:center; margin-bottom:14px; }
+  #s3 .kpi .v { font-size:38px; font-weight:700; color:#e8ecf4; letter-spacing:-.5px; }
+  #s3 .kpi .l { font-size:15.5px; color:#8892a8; margin-top:2px; }
+  #s3 .panel { background:#0f1320; border:1px solid #1e2438; border-radius:14px; padding:24px; margin-top:18px; }
+  #s3 .panel h4 { color:#e8ecf4; font-size:18px; font-weight:600; margin-bottom:14px; }
+  #s3 .chart { width:100%; height:210px; }
+  /* table plans */
+  #s3 .t-head, #s3 .t-row { display:grid; grid-template-columns:2.2fr .9fr .9fr 1.3fr .7fr; gap:14px; align-items:center; padding:15px 22px; }
+  #s3 .t-head { color:#5a6480; font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.8px; border-bottom:1px solid #1e2438; }
+  #s3 .t-row { border-top:1px solid #171d30; color:#c3ccdf; font-size:16.5px; }
+  #s3 .t-row b { color:#e8ecf4; font-weight:600; }
+  #s3 .t-row small { display:block; color:#5a6480; font-size:13.5px; margin-top:2px; }
+  #s3 .badge { display:inline-flex; align-items:center; gap:7px; padding:5px 13px; border-radius:8px; font-size:14px; font-weight:500; white-space:nowrap; }
+  #s3 .badge .d { width:7px; height:7px; border-radius:50%; }
+  #s3 .b-run { background:rgba(59,130,246,.12); color:#60a5fa; } #s3 .b-run .d { background:#3b82f6; }
+  #s3 .b-late { background:rgba(239,68,68,.12); color:#f87171; } #s3 .b-late .d { background:#ef4444; }
+  #s3 .b-done { background:rgba(16,185,129,.12); color:#34d399; } #s3 .b-done .d { background:#10b981; }
+  #s3 .b-plan { background:rgba(148,163,184,.12); color:#94a3b8; } #s3 .b-plan .d { background:#64748b; }
+  #s3 .b-prio-h { background:rgba(239,68,68,.12); color:#f87171; }
+  #s3 .b-prio-m { background:rgba(251,191,36,.12); color:#fbbf24; }
+  #s3 .pbar { height:8px; border-radius:4px; background:#1e2438; overflow:hidden; }
+  #s3 .pbar i { display:block; height:100%; border-radius:4px; background:#3b82f6; }
+  #s3 .pv { font-family:var(--app-font); color:#8892a8; font-size:14.5px; margin-top:5px; }
+  /* détail actions */
+  #s3 .a-head, #s3 .a-row { display:grid; grid-template-columns:.8fr 1fr 2.1fr 1fr .9fr 1fr .9fr; gap:14px; align-items:center; padding:14px 22px; }
+  #s3 .a-head { color:#5a6480; font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.8px; border-bottom:1px solid #1e2438; }
+  #s3 .a-row { border-top:1px solid #171d30; color:#c3ccdf; font-size:16px; }
+  #s3 .a-row .num { font-weight:600; color:#e8ecf4; }
+  #s3 .a-row .pil { display:flex; align-items:center; gap:9px; }
+  #s3 .a-row.hl { background:rgba(59,130,246,.08); }
+  /* drawer */
+  #s3 .drawer { position:absolute; top:0; bottom:0; right:0; width:560px; background:#0d1120; border-left:1px solid #2a3150;
+                box-shadow:-40px 0 90px -20px rgba(0,0,0,.6); padding:34px 36px; transform:translateX(600px); z-index:40; }
+  #s3 .drawer .dh { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+  #s3 .drawer h3 { color:#e8ecf4; font-size:24px; font-weight:700; max-width:400px; line-height:1.3; }
+  #s3 .drawer .num { font-family:var(--app-font); color:#60a5fa; font-size:15px; font-weight:600; margin-bottom:10px; display:block; }
+  #s3 .drawer .meta { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:22px; }
+  #s3 .drawer .m { background:#0f1320; border:1px solid #1e2438; border-radius:10px; padding:13px 16px; }
+  #s3 .drawer .m small { color:#5a6480; font-size:12.5px; text-transform:uppercase; letter-spacing:.8px; display:block; margin-bottom:5px; }
+  #s3 .drawer .m div { color:#c3ccdf; font-size:16px; }
+  #s3 .drawer .cause { margin-top:16px; }
+  #s3 .drawer .btn-close-a { margin-top:26px; width:100%; display:flex; align-items:center; justify-content:center; gap:10px;
+                             background:linear-gradient(135deg,#10b981,#059669); color:#fff; font-family:var(--app-font);
+                             font-size:18px; font-weight:600; padding:16px; border-radius:11px; }
+  /* notif drawer */
+  #s3 .ndrawer { position:absolute; top:95px; right:26px; width:520px; background:#0d1120; border:1px solid #2a3150;
+                 border-radius:14px; box-shadow:0 40px 90px -20px rgba(0,0,0,.7); padding:24px; transform:translateY(-30px); opacity:0; z-index:50; }
+  #s3 .ndrawer h4 { color:#e8ecf4; font-size:18px; font-weight:600; margin-bottom:14px; }
+  #s3 .n-item { display:flex; gap:13px; padding:13px 0; border-top:1px solid #171d30; opacity:0; }
+  #s3 .n-item .ni { flex:none; width:38px; height:38px; border-radius:10px; display:grid; place-items:center; }
+  #s3 .n-item b { color:#e8ecf4; font-size:15.5px; font-weight:600; display:block; line-height:1.35; }
+  #s3 .n-item small { color:#5a6480; font-size:13px; }
+  /* toast */
+  #s3 .toast { position:absolute; bottom:26px; right:26px; display:flex; align-items:center; gap:11px;
+               background:rgba(16,185,129,.13); border:1px solid rgba(16,185,129,.45); color:#34d399;
+               font-size:16.5px; font-weight:500; padding:15px 20px; border-radius:11px; opacity:0; z-index:60;
+               box-shadow:0 20px 50px rgba(0,0,0,.45); }
+
+  /* =====================================================================
+     S4 — INTÉGRATIONS (hub)
+     ===================================================================== */
+  #s4 .title { position:absolute; top:96px; left:0; right:0; text-align:center; }
+  #s4 .title .eyebrow { display:inline-flex; align-items:center; gap:12px; color:var(--teal); font-size:20px;
+                        font-weight:700; letter-spacing:.14em; text-transform:uppercase; }
+  #s4 .title .eyebrow::before, #s4 .title .eyebrow::after { content:""; width:30px; height:3px; background:var(--teal); border-radius:2px; }
+  #s4 .title h2 { font-family:var(--display); font-size:64px; font-weight:800; color:var(--navy); letter-spacing:-.015em; margin-top:14px; }
+  #s4 svg.wires { position:absolute; inset:0; }
+  #s4 .hub { position:absolute; left:960px; top:610px; transform:translate(-50%,-50%); width:300px;
+             background:linear-gradient(135deg,var(--teal) 0,var(--teal-d) 100%); border-radius:22px;
+             box-shadow:0 30px 80px -16px rgba(4,108,145,.55); padding:28px; text-align:center; opacity:0; }
+  #s4 .hub .tgt { width:64px; height:64px; margin:0 auto 12px; border-radius:16px; background:rgba(255,255,255,.16);
+                  display:grid; place-items:center; }
+  #s4 .hub b { color:#fff; font-family:var(--display); font-size:27px; font-weight:700; display:block; }
+  #s4 .hub small { color:rgba(255,255,255,.75); font-size:15px; }
+  #s4 .node { position:absolute; transform:translate(-50%,-50%); display:flex; align-items:center; gap:14px;
+              background:#fff; border:1px solid var(--light); border-radius:14px; padding:18px 26px;
+              box-shadow:0 22px 55px -14px rgba(26,32,53,.35); opacity:0; }
+  #s4 .node .nic { flex:none; width:44px; height:44px; border-radius:11px; background:var(--teal-l); color:var(--teal-d);
+                   display:grid; place-items:center; font-family:var(--display); font-weight:800; font-size:17px; }
+  #s4 .node b { font-size:21px; color:var(--navy); display:block; font-family:var(--display); letter-spacing:-.01em; }
+  #s4 .node small { font-size:14.5px; color:var(--gray); }
+  #s4 .capsule { position:absolute; left:50%; bottom:74px; transform:translateX(-50%); display:flex; align-items:center; gap:14px;
+                 background:#fff; border:1px solid var(--light); border-radius:100px; padding:16px 30px;
+                 box-shadow:0 20px 55px -12px rgba(26,32,53,.3); font-size:22px; color:var(--navy); font-weight:600; opacity:0; }
+  #s4 .capsule .ck { width:32px; height:32px; border-radius:50%; background:var(--teal); color:#fff; display:grid; place-items:center; }
+
+  /* =====================================================================
+     S5 — COMPARATIF
+     ===================================================================== */
+  #s5 .title { position:absolute; top:88px; left:0; right:0; text-align:center; }
+  #s5 .title h2 { font-family:var(--display); font-size:58px; font-weight:800; color:var(--navy); letter-spacing:-.015em; }
+  #s5 .title h2 .vs { color:#8a93a8; font-weight:600; }
+  #s5 .table { position:absolute; left:280px; right:280px; top:310px; background:#fff; border:1px solid var(--light);
+               border-radius:18px; box-shadow:0 30px 90px -20px rgba(26,32,53,.28); overflow:hidden; }
+  #s5 .thead { display:grid; grid-template-columns:1.1fr 1.2fr 1.2fr; }
+  #s5 .thead > div { padding:24px 30px; font-family:var(--display); font-size:20px; font-weight:700;
+                     text-transform:uppercase; letter-spacing:.06em; border-bottom:2px solid var(--light); }
+  #s5 .thead .cx { color:var(--bad); }
+  #s5 .thead .cp { color:#fff; background:linear-gradient(135deg,var(--teal) 0,var(--teal-d) 100%); border-bottom-color:transparent; }
+  #s5 .trow { display:grid; grid-template-columns:1.1fr 1.2fr 1.2fr; opacity:0; }
+  #s5 .trow > div { padding:25px 30px; font-size:22px; border-bottom:1px solid #eef2f7; display:flex; align-items:center; gap:13px; }
+  #s5 .trow:last-child > div { border-bottom:none; }
+  #s5 .crit { font-weight:700; color:var(--navy); font-family:var(--display); }
+  #s5 .cx { color:var(--gray); }
+  #s5 .cp { color:var(--navy); font-weight:600; background:linear-gradient(180deg,rgba(6,182,212,.06),rgba(4,108,145,.03)); }
+  #s5 .mk { flex:none; width:30px; height:30px; border-radius:9px; display:grid; place-items:center; font-weight:800; font-size:17px; }
+  #s5 .mk.x { background:var(--bad-l); color:var(--bad); }
+  #s5 .mk.v { background:var(--teal-l); color:var(--teal-d); }
+
+  /* =====================================================================
+     S6 — OUTRO
+     ===================================================================== */
+  #s6 .halo { position:absolute; left:50%; top:44%; width:1400px; height:1400px; transform:translate(-50%,-50%);
+              background:radial-gradient(circle, rgba(4,108,145,.28) 0, transparent 58%); }
+  #s6 .wrap { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+  #s6 .logo { width:120px; height:150px; color:#5fb4d4; }
+  #s6 .logo svg { width:100%; height:100%; }
+  #s6 h1 { margin-top:30px; font-family:var(--display); font-size:78px; font-weight:800; color:#fff; letter-spacing:-.018em; }
+  #s6 h1 span { color:#5fb4d4; }
+  #s6 .tag { margin-top:16px; font-size:32px; color:rgba(255,255,255,.78); }
+  #s6 .cta { margin-top:44px; display:flex; align-items:center; gap:22px; background:#fff; border-radius:16px;
+             padding:24px 38px; box-shadow:0 30px 80px -18px rgba(0,0,0,.5); opacity:0; }
+  #s6 .cta .pl { width:54px; height:54px; border-radius:13px; background:var(--blue); color:#fff; display:grid; place-items:center; }
+  #s6 .cta b { display:block; font-family:var(--display); font-size:26px; color:var(--navy); }
+  #s6 .cta span { display:block; font-size:19px; color:var(--gray); margin-top:2px; font-family:var(--mono); }
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <!-- Logo Synappli (defs) -->
+  <svg width="0" height="0" style="position:absolute"><defs>
+    <g id="mark">
+      <path d="M74 156 C60 120 66 92 96 84 C120 78 140 80 158 80 C176 80 190 71 190 55 C190 38 178 26 159 26 C130 26 92 30 64 46 C40 60 28 84 30 108 C32 132 50 150 74 156 Z"/>
+      <path transform="rotate(180 110 138)" d="M74 156 C60 120 66 92 96 84 C120 78 140 80 158 80 C176 80 190 71 190 55 C190 38 178 26 159 26 C130 26 92 30 64 46 C40 60 28 84 30 108 C32 132 50 150 74 156 Z"/>
+      <circle cx="110" cy="138" r="20"/>
+    </g>
+    <g id="tgt-ic">
+      <circle cx="20" cy="20" r="16" fill="none" stroke="#fff" stroke-width="3.4"/>
+      <circle cx="20" cy="20" r="8.5" fill="none" stroke="#fff" stroke-width="3.4"/>
+      <circle cx="20" cy="20" r="2.6" fill="#fff"/>
+    </g>
+  </defs></svg>
+
+  <!-- ============ S0 INTRO ============ -->
+  <section class="scene bg-light" id="s0">
+    <div class="halo" id="s0halo"></div>
+    <div class="wrap">
+      <div class="logo" id="s0logo"><svg viewBox="0 0 220 276" fill="currentColor"><use href="#mark"/></svg></div>
+      <div class="presente" id="s0pres">Synappli présente</div>
+      <h1 id="s0title">Pilotaction</h1>
+      <div class="sub" id="s0sub">Le pilotage de plans d'actions, sans tableur.</div>
+    </div>
+  </section>
+
+  <!-- ============ S1 EXCEL ============ -->
+  <section class="scene bg-light" id="s1">
+    <div class="cam" id="s1cam">
+      <div class="window" id="s1win">
+        <div class="win-bar">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="win-file" id="s1file">Plan_actions_2026_v3_FINAL_(2)_corrigé_ok.xlsx</span>
+        </div>
+        <div class="ribbon">
+          <span class="tab" data-tab="0" id="s1tab0">Plan RH</span>
+          <span class="tab" data-tab="1" id="s1tab1">Plan CRM (copie)</span>
+          <span class="tab">Sauvegarde</span>
+          <span class="tab">NE PAS TOUCHER</span>
+        </div>
+        <div class="grid" id="s1grid0"></div>
+        <div class="grid" id="s1grid1" style="display:none"></div>
+        <div class="ghostline" id="s1ghost"></div>
+      </div>
+      <div class="files" id="s1files">
+        <div class="file"><span class="xl-ic">X</span>Plan_actions_2026_v2.xlsx</div>
+        <div class="file"><span class="xl-ic">X</span>Plan_actions_FINAL.xlsx</div>
+        <div class="file"><span class="xl-ic">X</span>Copie de Plan_actions (Lucas).xlsx</div>
+      </div>
+    </div>
+    <div class="shade" id="s1shade"></div>
+    <div class="painpanel" id="s1pp">
+      <h3>Le tableur ne suit plus.</h3>
+      <div class="pp-item"><span class="x">✕</span><div><b>Erreurs invisibles</b><span>#REF!, dates fausses, formules écrasées</span></div></div>
+      <div class="pp-item"><span class="x">✕</span><div><b>Actions perdues, retards subis</b><span>Aucune relance, aucun responsable clair</span></div></div>
+      <div class="pp-item"><span class="x">✕</span><div><b>Zéro traçabilité</b><span>Impossible à prouver en audit</span></div></div>
+    </div>
+    <div class="callout red" id="s1c1" style="left:150px; bottom:120px;">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></span>
+      <div><b>Formules cassées, erreurs invisibles</b><span>Le chiffre est faux — et personne ne le voit.</span></div>
+    </div>
+    <div class="callout red" id="s1c2" style="left:150px; bottom:120px;">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></span>
+      <div><b>Une action supprimée… aucune trace</b><span>Qui ? Quand ? Pourquoi ? Impossible à dire.</span></div>
+    </div>
+    <div class="callout red" id="s1c3" style="left:auto; right:150px; top:430px; bottom:auto;">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></span>
+      <div><b>Plusieurs versions en circulation</b><span>v2, FINAL, copie de Lucas… laquelle fait foi ?</span></div>
+    </div>
+  </section>
+
+  <!-- ============ S2 DÉCLIC ============ -->
+  <section class="scene bg-navy" id="s2">
+    <div class="wrap">
+      <div class="bar" id="s2bar"></div>
+      <div class="l1" id="s2l1">Et si le problème n'était pas votre équipe…</div>
+      <div class="l2" id="s2l2">mais votre outil ?</div>
+    </div>
+  </section>
+
+  <!-- ============ S3 APP ============ -->
+  <section class="scene bg-light" id="s3">
+    <div class="appwrap" id="s3app">
+      <aside class="side">
+        <div class="brand">
+          <span class="bx"><svg width="26" height="26" viewBox="0 0 40 40"><use href="#tgt-ic"/></svg></span>
+          <div><b>PilotAction</b><small>Pilotage de plans d'actions</small></div>
+        </div>
+        <div class="nav-h">Navigation</div>
+        <div class="nav-i" data-nav="dash" id="s3navDash"><svg viewBox="0 0 24 24" fill="none"><path d="M4 13h6V4H4v9zm10 7h6v-9h-6v9zM4 20h6v-4H4v4zM14 4v5h6V4h-6z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>Tableau de bord</div>
+        <div class="nav-i" data-nav="plans" id="s3navPlans"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6h11M9 12h11M9 18h7M4 6h.01M4 12h.01M4 18h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Plans d'actions</div>
+        <div class="nav-i"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.8"/><path d="M5.5 20c0-3.4 2.9-6 6.5-6s6.5 2.6 6.5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Mes actions</div>
+        <div class="nav-i"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4a5 5 0 00-5 5c0 4-2 5-2 5h14s-2-1-2-5a5 5 0 00-5-5zM10 19a2 2 0 004 0" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>Notifications</div>
+        <div class="nav-i"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>Équipe &amp; Rôles</div>
+        <div class="nav-i"><svg viewBox="0 0 24 24" fill="none"><path d="M5 19V5m0 14l4-3 4 2 6-5M9 16V9m4 9V11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Rapports</div>
+        <div class="userbox">
+          <span class="av" style="width:38px;height:38px;background:#3b82f6;font-size:14px;">SM</span>
+          <div><b>Sophie Martin</b><small>Administratrice</small></div>
+        </div>
+      </aside>
+      <div class="main">
+        <div class="hdr">
+          <div><h2 id="s3title">Tableau de bord</h2><p id="s3sub">Vue d'ensemble de vos plans d'actions</p></div>
+          <div class="hdr-right">
+            <span class="btn-exp" id="s3exp"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Exporter PDF</span>
+            <span class="bell" id="s3bell"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 4a5 5 0 00-5 5c0 4-2 5-2 5h14s-2-1-2-5a5 5 0 00-5-5zM10 19a2 2 0 004 0" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span class="bdg" id="s3bdg">3</span></span>
+          </div>
+        </div>
+
+        <!-- VIEW dashboard -->
+        <div class="view" id="s3vDash">
+          <div class="kpis">
+            <div class="kpi"><span class="ic" style="background:rgba(59,130,246,.14);color:#60a5fa;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M9 6h11M9 12h11M9 18h7M4 6h.01M4 12h.01M4 18h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span><div class="v"><span id="k1">0</span></div><div class="l">Plans actifs</div></div>
+            <div class="kpi"><span class="ic" style="background:rgba(6,182,212,.14);color:#22d3ee;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 19V5m0 14l4-3 4 2 6-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div class="v"><span id="k2">0</span>%</div><div class="l">Avancement moyen</div></div>
+            <div class="kpi"><span class="ic" style="background:rgba(16,185,129,.14);color:#34d399;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div class="v"><span id="k3">0</span>%</div><div class="l">Actions à l'heure</div></div>
+            <div class="kpi"><span class="ic" style="background:rgba(239,68,68,.14);color:#f87171;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 8v5m0 3.5v.5M10.3 3.9L2.6 17a2 2 0 001.7 3h15.4a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div class="v"><span id="k4">0</span></div><div class="l">Actions en retard</div></div>
+          </div>
+          <div class="panel">
+            <h4>Taux de complétion — 6 dernières semaines</h4>
+            <svg class="chart" id="s3chart" viewBox="0 0 1300 210" preserveAspectRatio="none">
+              <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#3b82f6" stop-opacity=".34"/><stop offset="1" stop-color="#3b82f6" stop-opacity="0"/>
+              </linearGradient></defs>
+              <path id="s3area" fill="url(#ag)" d=""/>
+              <path id="s3line" fill="none" stroke="#3b82f6" stroke-width="4" stroke-linecap="round" d=""/>
+            </svg>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
+            <div class="panel" style="margin-top:18px;">
+              <h4>Charge par pilote</h4>
+              <div style="display:flex; flex-direction:column; gap:13px;">
+                <div style="display:flex; align-items:center; gap:14px;"><span style="color:#8892a8;font-size:15px;width:110px;">Sophie M.</span><div class="pbar" style="flex:1;"><i class="loadbar" data-w="85" style="width:0%;background:#3b82f6;"></i></div><span style="color:#c3ccdf;font-size:14px;width:44px;text-align:right;">85%</span></div>
+                <div style="display:flex; align-items:center; gap:14px;"><span style="color:#8892a8;font-size:15px;width:110px;">Thomas P.</span><div class="pbar" style="flex:1;"><i class="loadbar" data-w="90" style="width:0%;background:#f59e0b;"></i></div><span style="color:#c3ccdf;font-size:14px;width:44px;text-align:right;">90%</span></div>
+                <div style="display:flex; align-items:center; gap:14px;"><span style="color:#8892a8;font-size:15px;width:110px;">Lucas D.</span><div class="pbar" style="flex:1;"><i class="loadbar" data-w="72" style="width:0%;background:#8b5cf6;"></i></div><span style="color:#c3ccdf;font-size:14px;width:44px;text-align:right;">72%</span></div>
+                <div style="display:flex; align-items:center; gap:14px;"><span style="color:#8892a8;font-size:15px;width:110px;">Julie M.</span><div class="pbar" style="flex:1;"><i class="loadbar" data-w="68" style="width:0%;background:#06b6d4;"></i></div><span style="color:#c3ccdf;font-size:14px;width:44px;text-align:right;">68%</span></div>
+              </div>
+            </div>
+            <div class="panel" style="margin-top:18px;">
+              <h4>Activité récente</h4>
+              <div style="display:flex; flex-direction:column;">
+                <div style="display:flex; gap:12px; padding:10px 0; border-bottom:1px solid #171d30;"><span class="av" style="width:32px;height:32px;background:#06b6d4;font-size:12px;">JM</span><div><div style="color:#c3ccdf;font-size:15px;">Julie a commenté <b style="color:#e8ecf4;">Déploiement CRM</b></div><div style="color:#5a6480;font-size:13px;">il y a 12 min</div></div></div>
+                <div style="display:flex; gap:12px; padding:10px 0; border-bottom:1px solid #171d30;"><span class="av" style="width:32px;height:32px;background:#8b5cf6;font-size:12px;">LD</span><div><div style="color:#c3ccdf;font-size:15px;">Lucas a mis à jour <b style="color:#e8ecf4;">ACT-C05</b> → 35%</div><div style="color:#5a6480;font-size:13px;">il y a 40 min</div></div></div>
+                <div style="display:flex; gap:12px; padding:10px 0;"><span class="av" style="width:32px;height:32px;background:#f59e0b;font-size:12px;">TP</span><div><div style="color:#c3ccdf;font-size:15px;">Thomas a clôturé <b style="color:#e8ecf4;">Formation cybersécurité</b></div><div style="color:#5a6480;font-size:13px;">hier</div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW plans -->
+        <div class="view" id="s3vPlans">
+          <div class="panel" style="margin-top:0; padding:0; overflow:hidden;">
+            <div class="t-head"><div>Plan</div><div>Priorité</div><div>Statut</div><div>Progression</div><div>Resp.</div></div>
+            <div class="t-row"><div><b>Transformation digitale RH</b><small>12 actions · Digital</small></div><div><span class="badge b-prio-h">Haute</span></div><div><span class="badge b-run"><span class="d"></span>En cours</span></div><div><div class="pbar"><i style="width:45%"></i></div><div class="pv">45%</div></div><div><span class="av" style="width:34px;height:34px;background:#3b82f6;font-size:13px;">SM</span></div></div>
+            <div class="t-row"><div><b>Optimisation supply chain</b><small>8 actions · Opérations</small></div><div><span class="badge b-prio-m">Moyenne</span></div><div><span class="badge b-run"><span class="d"></span>En cours</span></div><div><div class="pbar"><i style="width:68%"></i></div><div class="pv">68%</div></div><div><span class="av" style="width:34px;height:34px;background:#8b5cf6;font-size:13px;">LD</span></div></div>
+            <div class="t-row" id="s3rowCRM"><div><b>Déploiement CRM Salesforce</b><small>15 actions · Commercial</small></div><div><span class="badge b-prio-h">Haute</span></div><div><span class="badge b-late"><span class="d"></span>En retard</span></div><div><div class="pbar"><i style="width:30%;background:#ef4444;"></i></div><div class="pv">30%</div></div><div><span class="av" style="width:34px;height:34px;background:#06b6d4;font-size:13px;">JM</span></div></div>
+            <div class="t-row"><div><b>Formation cybersécurité</b><small>6 actions · IT</small></div><div><span class="badge b-prio-h">Haute</span></div><div><span class="badge b-done"><span class="d"></span>Terminé</span></div><div><div class="pbar"><i style="width:100%;background:#10b981;"></i></div><div class="pv">100%</div></div><div><span class="av" style="width:34px;height:34px;background:#f59e0b;font-size:13px;">TP</span></div></div>
+            <div class="t-row"><div><b>Audit qualité ISO 9001</b><small>9 actions · Qualité</small></div><div><span class="badge b-prio-h">Haute</span></div><div><span class="badge b-plan"><span class="d"></span>Planifié</span></div><div><div class="pbar"><i style="width:0%"></i></div><div class="pv">0%</div></div><div><span class="av" style="width:34px;height:34px;background:#06b6d4;font-size:13px;">JM</span></div></div>
+          </div>
+        </div>
+
+        <!-- VIEW détail -->
+        <div class="view" id="s3vDetail">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+            <div>
+              <div style="display:flex; align-items:center; gap:14px;">
+                <h3 style="color:#e8ecf4; font-size:26px; font-weight:700;">Déploiement CRM Salesforce</h3>
+                <span class="badge b-late"><span class="d"></span>En retard</span>
+              </div>
+              <div style="color:#8892a8; font-size:15.5px; margin-top:5px;">Responsable : Julie Moreau · 7 actions · Créé le 01/01/2026</div>
+            </div>
+            <div style="width:320px;">
+              <div style="display:flex; justify-content:space-between; color:#8892a8; font-size:14px; margin-bottom:6px;"><span>Avancement global</span><b id="s3ppct" style="color:#e8ecf4;">30%</b></div>
+              <div class="pbar" style="height:10px;"><i id="s3pbar" style="width:30%;background:#ef4444;"></i></div>
+            </div>
+          </div>
+          <div class="panel" style="margin-top:0; padding:0; overflow:hidden;">
+            <div class="a-head"><div>N°</div><div>Type</div><div>Action</div><div>Pilote</div><div>Échéance</div><div>Statut</div><div>Avanct</div></div>
+            <div class="a-row"><div class="num">ACT-C01</div><div>Organisationnelle</div><div>Cadrage du projet CRM : périmètre et objectifs</div><div class="pil"><span class="av" style="width:30px;height:30px;background:#06b6d4;font-size:12px;">JM</span>Julie</div><div>15/01</div><div><span class="badge b-done"><span class="d"></span>Terminé</span></div><div class="pv" style="margin:0;">100%</div></div>
+            <div class="a-row"><div class="num">ACT-C02</div><div>Corrective</div><div>Mapping des processus commerciaux actuels</div><div class="pil"><span class="av" style="width:30px;height:30px;background:#8b5cf6;font-size:12px;">LD</span>Lucas</div><div>01/02</div><div><span class="badge b-done"><span class="d"></span>Terminé</span></div><div class="pv" style="margin:0;">100%</div></div>
+            <div class="a-row"><div class="num">ACT-C03</div><div>Amélioration</div><div>Configuration initiale de l'org Salesforce</div><div class="pil"><span class="av" style="width:30px;height:30px;background:#06b6d4;font-size:12px;">JM</span>Julie</div><div>28/02</div><div><span class="badge b-done"><span class="d"></span>Terminé</span></div><div class="pv" style="margin:0;">100%</div></div>
+            <div class="a-row"><div class="num">ACT-C04</div><div>Amélioration</div><div>Automatisations Salesforce (Flows, triggers)</div><div class="pil"><span class="av" style="width:30px;height:30px;background:#3b82f6;font-size:12px;">SM</span>Sophie</div><div>15/03</div><div><span class="badge b-done"><span class="d"></span>Terminé</span></div><div class="pv" style="margin:0;">100%</div></div>
+            <div class="a-row" id="s3rowAct"><div class="num">ACT-C05</div><div>Corrective</div><div>Intégration API REST entre SAP ERP et Salesforce</div><div class="pil"><span class="av" style="width:30px;height:30px;background:#8b5cf6;font-size:12px;">LD</span>Lucas</div><div>30/03</div><div><span class="badge b-late" id="s3actBadge"><span class="d"></span>En retard</span></div><div class="pv" style="margin:0;" id="s3actPct">35%</div></div>
+            <div class="a-row"><div class="num">ACT-C06</div><div>Corrective</div><div>Migration des données clients vers Salesforce</div><div class="pil"><span class="av" style="width:30px;height:30px;background:#06b6d4;font-size:12px;">JM</span>Julie</div><div>01/04</div><div><span class="badge b-late"><span class="d"></span>En retard</span></div><div class="pv" style="margin:0;">20%</div></div>
+            <div class="a-row"><div class="num">ACT-C07</div><div>Préventive</div><div>Tests utilisateurs (UAT) avec les key users</div><div class="pil"><span class="av" style="width:30px;height:30px;background:#3b82f6;font-size:12px;">SM</span>Sophie</div><div>15/04</div><div><span class="badge b-plan"><span class="d"></span>Planifié</span></div><div class="pv" style="margin:0;">0%</div></div>
+          </div>
+        </div>
+
+        <!-- DRAWER action -->
+        <div class="drawer" id="s3drawer">
+          <span class="num">ACT-C05 · Corrective · Risque haut</span>
+          <div class="dh"><h3>Intégration API REST entre SAP ERP et Salesforce</h3></div>
+          <div class="meta">
+            <div class="m"><small>Pilote</small><div>Lucas Dubois</div></div>
+            <div class="m"><small>Échéance</small><div>30/03/2026</div></div>
+            <div class="m"><small>Processus</small><div>IT</div></div>
+            <div class="m"><small>Avancement</small><div id="s3dPct">35%</div></div>
+          </div>
+          <div class="m cause"><small>Recherche de cause</small><div>API SAP non documentée — support éditeur contacté</div></div>
+          <div class="m" style="margin-top:12px;"><small>Sous-actions</small><div>2/3 terminées — reste : tests de charge</div></div>
+          <div class="btn-close-a" id="s3btnClose"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Clôturer l'action</div>
+        </div>
+
+        <!-- NOTIF drawer -->
+        <div class="ndrawer" id="s3nd">
+          <h4>Notifications &amp; relances</h4>
+          <div class="n-item"><span class="ni" style="background:rgba(251,191,36,.14);color:#fbbf24;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span><div><b>Relance automatique : « Migration des données clients » arrive à échéance demain</b><small>Julie Moreau notifiée · il y a 2 min</small></div></div>
+          <div class="n-item"><span class="ni" style="background:rgba(239,68,68,.14);color:#f87171;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 8v5m0 3.5v.5M10.3 3.9L2.6 17a2 2 0 001.7 3h15.4a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Action en retard de 3 j — pilote et responsable notifiés</b><small>ACT-306 · Optimisation supply chain · il y a 1 h</small></div></div>
+          <div class="n-item"><span class="ni" style="background:rgba(16,185,129,.14);color:#34d399;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Revue d'efficacité validée sur « Formation cybersécurité »</b><small>Sophie Martin · hier</small></div></div>
+        </div>
+
+        <div class="toast" id="s3toast"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="s3toastTxt">Action clôturée — revue d'efficacité demandée</span></div>
+      </div>
+    </div>
+
+    <div class="callout green" id="s3c1" style="left:120px; bottom:110px;">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <div><b>Chaque action a un pilote et une échéance</b><span>Fini le « qui devait faire ça, déjà ? »</span></div>
+    </div>
+    <div class="callout green" id="s3c2" style="left:120px; bottom:110px;">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <div><b>Revue d'efficacité intégrée</b><span>La boucle qualité est bouclée — prêt pour l'audit.</span></div>
+    </div>
+    <div class="callout green" id="s3c3" style="left:120px; bottom:110px;">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <div><b>Relances automatiques</b><span>Plus rien ne passe à la trappe.</span></div>
+    </div>
+    <div class="callout green" id="s3c4" style="left:120px; bottom:110px;">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <div><b>Tableaux de bord &amp; exports en un clic</b><span>PDF, CSV — vos rapports sont déjà prêts.</span></div>
+    </div>
+  </section>
+
+  <!-- ============ S4 HUB ============ -->
+  <section class="scene bg-light" id="s4">
+    <div class="title">
+      <span class="eyebrow" id="s4eb">Intégrations</span>
+      <h2 id="s4h2">Se câble à vos outils internes</h2>
+    </div>
+    <svg class="wires" id="s4wires" viewBox="0 0 1920 1080"></svg>
+    <div class="hub" id="s4hub">
+      <span class="tgt"><svg width="40" height="40" viewBox="0 0 40 40"><use href="#tgt-ic"/></svg></span>
+      <b>Pilotaction</b><small>API &amp; connecteurs</small>
+    </div>
+    <div class="node" data-nx="330"  data-ny="450"><span class="nic">ERP</span><div><b>Votre ERP</b><small>Synchronisation des données</small></div></div>
+    <div class="node" data-nx="440"  data-ny="800"><span class="nic">CRM</span><div><b>Votre CRM</b><small>Plans liés aux comptes</small></div></div>
+    <div class="node" data-nx="960"  data-ny="330"><span class="nic">XLS</span><div><b>Import Excel / CSV</b><small>Reprise de l'existant</small></div></div>
+    <div class="node" data-nx="1590" data-ny="450"><span class="nic">SSO</span><div><b>SSO / Annuaire</b><small>Comptes &amp; rôles automatiques</small></div></div>
+    <div class="node" data-nx="1480" data-ny="800"><span class="nic">@</span><div><b>E-mail &amp; notifications</b><small>Relances dans vos boîtes</small></div></div>
+    <div class="node" data-nx="960"  data-ny="905"><span class="nic">API</span><div><b>Outils métiers internes</b><small>API REST documentée</small></div></div>
+    <div class="capsule" id="s4cap"><span class="ck"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Vos données restent synchronisées — sans double saisie</div>
+  </section>
+
+  <!-- ============ S5 COMPARATIF ============ -->
+  <section class="scene bg-light" id="s5">
+    <div class="title"><h2>Tableur Excel <span class="vs">vs</span> Pilotaction</h2></div>
+    <div class="table">
+      <div class="thead"><div></div><div class="cx">Tableur Excel</div><div class="cp">Pilotaction</div></div>
+      <div class="trow"><div class="crit">Suivi des actions</div><div class="cx"><span class="mk x">✕</span>Noyées dans les onglets</div><div class="cp"><span class="mk v">✓</span>Chaque action pilotée</div></div>
+      <div class="trow"><div class="crit">Responsables</div><div class="cx"><span class="mk x">✕</span>Personne n'est responsable</div><div class="cp"><span class="mk v">✓</span>Pilote + échéance clairs</div></div>
+      <div class="trow"><div class="crit">Retards</div><div class="cx"><span class="mk x">✕</span>Découverts trop tard</div><div class="cp"><span class="mk v">✓</span>Relances automatiques</div></div>
+      <div class="trow"><div class="crit">Traçabilité</div><div class="cx"><span class="mk x">✕</span>Aucune</div><div class="cp"><span class="mk v">✓</span>Historique complet, prêt audit</div></div>
+    </div>
+  </section>
+
+  <!-- ============ S6 OUTRO ============ -->
+  <section class="scene bg-navy" id="s6">
+    <div class="halo" id="s6halo"></div>
+    <div class="wrap">
+      <div class="logo" id="s6logo"><svg viewBox="0 0 220 276" fill="currentColor"><use href="#mark"/></svg></div>
+      <h1 id="s6h1">Synappli <span>· Pilotaction</span></h1>
+      <div class="tag" id="s6tag">Vos plans d'actions, enfin sous contrôle.</div>
+      <div class="cta" id="s6cta">
+        <span class="pl"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+        <div style="text-align:left;"><b>Demandez une démo</b><span>contact@synappli.com</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CURSEUR ============ -->
+  <div id="cursor">
+    <svg viewBox="0 0 32 32" width="56" height="56">
+      <path d="M9 3 L9 26 L14.6 20.8 L18 29 L21.6 27.4 L18.2 19.4 L26 19 Z"
+            fill="#111319" stroke="#fff" stroke-width="2.1" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <div class="ripple" id="ripple"></div>
+</div>
+
+<script>
+"use strict";
+/* ============================ HELPERS ============================ */
+const clamp01 = v => v < 0 ? 0 : v > 1 ? 1 : v;
+const lerp = (a, b, p) => a + (b - a) * p;
+const easeIO = p => p < .5 ? 4*p*p*p : 1 - Math.pow(-2*p+2, 3)/2;
+const easeO  = p => 1 - Math.pow(1 - p, 3);
+const easeOB = p => { const c1 = 1.5, c3 = c1 + 1; return 1 + c3*Math.pow(p-1,3) + c1*Math.pow(p-1,2); }; // back-out léger
+// progression 0→1 entre a et b
+const win = (t, a, b) => clamp01((t - a) / (b - a));
+const $  = id => document.getElementById(id);
+
+function setOp(el, v)   { el.style.opacity = v; }
+function setT(el, x, y, s, r) {
+  el.style.transform = `translate(${x}px,${y}px)` + (s !== undefined ? ` scale(${s})` : '') + (r ? ` rotate(${r}deg)` : '');
+}
+// apparition standard : fade + slide-up
+function reveal(el, t, start, dur = 600, dy = 26) {
+  const p = easeO(win(t, start, start + dur));
+  setOp(el, p); setT(el, 0, (1 - p) * dy);
+  return p;
+}
+// apparition pop (scale)
+function pop(el, t, start, dur = 500) {
+  const p = win(t, start, start + dur);
+  setOp(el, easeO(p)); el.style.transform = `scale(${lerp(.75, 1, easeOB(p))})`;
+  return p;
+}
+// fondu de scène
+function sceneFade(t, a, b, fin = 600, fout = 600) {
+  if (t < a || t >= b + fout) return 0;
+  return Math.min(win(t, a, a + fin), 1 - win(t, b, b + fout));
+}
+// carton : slide-in puis slide-out
+function callout(el, t, start, end) {
+  const pin = easeO(win(t, start, start + 550));
+  const pout = win(t, end, end + 400);
+  setOp(el, pin * (1 - pout));
+  setT(el, (1 - pin) * -40, 0);
+}
+
+/* ============================ TIMELINE ============================ */
+const SC = {
+  s0: { a: 0,     b: 5000  },
+  s1: { a: 5500,  b: 23400 },
+  s2: { a: 24000, b: 27900 },
+  s3: { a: 28500, b: 51300 },
+  s4: { a: 52000, b: 60300 },
+  s5: { a: 61000, b: 68300 },
+  s6: { a: 69000, b: 76000 },
+};
+window.DURATION = 76000;
+
+/* ============================ EXCEL GRIDS ============================ */
+const XL_HEAD = ["", "N°", "Action", "Pilote", "Échéance", "Statut", "Av.", "Commentaire"];
+const XL1 = [
+  ["ACT-001", "Cartographier les process RH", "Marie", "15/02", "Terminé", "100%", "ok"],
+  ["ACT-002", "Benchmark SIRH", "", "28/02", "#REF!", "100", "voir v2 ??"],
+  ["ACT-003", "Specs fonctionnelles", "Jean", "15/03", "?", "=E4", ""],
+  ["ACT-004", "Appel d'offres prestataire", "Marie", "31/O3", "En retar", "#VALUE!", "RELANCER !!"],
+  ["ACT-005", "Paramétrage de l'outil", "sophie", "15/04", "OK", "100", ""],
+  ["ACT-006", "Migration des données paie", "", "#REF!", "En cours", "60%", "qui s'en occupe ?"],
+  ["ACT-007", "Portail self-service", "Thomas", "30/05", "en cour", "40", ""],
+  ["ACT-008", "Tests d'intégration", "Marie", "30/05", "doublon?", "#NAME?", "cf onglet Sauvegarde"],
+  ["ACT-009", "Formation des managers", "Emma", "15/06", "", "", "planifié ?"],
+  ["ACT-010", "Go-live et support", "", "10/07", "Planifié", "0", ""],
+  ["", "", "", "", "", "", ""],
+  ["", "", "", "", "", "", ""],
+  ["", "", "", "", "", "", ""],
+];
+const XL2 = [
+  ["ACT-C01", "Cadrage projet CRM", "Julie", "15/01", "Terminé", "100%", ""],
+  ["ACT-C02", "Mapping processus commerciaux", "Lucas", "01/02", "Terminé", "100", "v2 ?"],
+  ["ACT-C03", "Configuration org Salesforce", "Julie", "28/02", "#VALUE!", "#REF!", "formule cassée"],
+  ["ACT-C04", "Automatisations (Flows)", "Sophie", "15/03", "OK", "1OO", "typo ?"],
+  ["ACT-C05", "Intégration API SAP ↔ CRM", "Lucas", "30/03", "En retard", "35", "URGENT"],
+  ["ACT-C06", "Migration données clients", "", "01/04", "En retard", "20%", "15 000 comptes !!"],
+  ["ACT-C07", "Tests UAT key users", "Sophie", "15/04", "", "", ""],
+  ["", "", "", "", "", "", ""],
+  ["ACT-C09 ???", "Recette finale", "Julie", "#REF!", "doublon", "#DIV/0!", "à vérifier"],
+  ["ACT-C10", "Go-live", "", "01/05", "Planifié", "0", ""],
+  ["", "", "", "", "", "", ""],
+  ["", "", "", "", "", "", ""],
+  ["", "", "", "", "", "", ""],
+];
+const XL_ERR = { "#REF!":1, "#VALUE!":1, "#DIV/0!":1, "#NAME?":1 };
+const XL_WARN = { "31/O3":1, "En retar":1, "en cour":1, "?":1, "doublon?":1, "doublon":1, "=E4":1, "1OO":1, "ACT-C09 ???":1 };
+
+function buildGrid(el, rows) {
+  XL_HEAD.forEach((h, i) => {
+    const d = document.createElement("div");
+    d.className = "c head"; d.textContent = i === 0 ? "" : h; el.appendChild(d);
+  });
+  rows.forEach((r, ri) => {
+    const rn = document.createElement("div");
+    rn.className = "c rownum"; rn.textContent = ri + 2; el.appendChild(rn);
+    r.forEach(v => {
+      const d = document.createElement("div");
+      d.className = "c" + (XL_ERR[v] ? " err" : "") + (XL_WARN[v] ? " warn" : "") + (v === "annulé" ? " strike" : "");
+      d.dataset.row = ri; d.textContent = v; el.appendChild(d);
+    });
+  });
+}
+buildGrid($("s1grid0"), XL1);
+buildGrid($("s1grid1"), XL2);
+const G1_CELLS = Array.from($("s1grid1").children);
+const g1RowCells = ri => G1_CELLS.filter(c => c.dataset.row == ri || (c.classList.contains("rownum") && c.textContent == ri + 2));
+
+/* ============================ CHART (dashboard) ============================ */
+(function buildChart(){
+  const pts = [[0,168],[216,158],[432,150],[648,132],[864,118],[1080,96],[1300,72]];
+  const line = "M" + pts.map(p => p.join(",")).join(" L");
+  $("s3line").setAttribute("d", line);
+  $("s3area").setAttribute("d", line + ` L1300,210 L0,210 Z`);
+  const path = $("s3line");
+  window.__chartLen = path.getTotalLength();
+  path.style.strokeDasharray = window.__chartLen;
+})();
+
+/* ============================ S4 WIRES ============================ */
+const HUBX = 960, HUBY = 610;
+const NODES = Array.from(document.querySelectorAll("#s4 .node"));
+NODES.forEach(n => { n.style.left = n.dataset.nx + "px"; n.style.top = n.dataset.ny + "px"; });
+const WIRES = [];
+(function buildWires(){
+  const svg = $("s4wires");
+  NODES.forEach(n => {
+    const x = +n.dataset.nx, y = +n.dataset.ny;
+    const mx = (HUBX + x) / 2, my = (HUBY + y) / 2 - Math.sign(HUBY - y + .1) * 40;
+    const d = `M${HUBX},${HUBY} Q${mx},${my} ${x},${y}`;
+    const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    p.setAttribute("d", d); p.setAttribute("fill", "none");
+    p.setAttribute("stroke", "rgba(4,108,145,.45)"); p.setAttribute("stroke-width", "3.5");
+    p.setAttribute("stroke-linecap", "round");
+    svg.appendChild(p);
+    const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    dot.setAttribute("r", "7"); dot.setAttribute("fill", "#046c91"); dot.setAttribute("opacity", "0");
+    svg.appendChild(dot);
+    const len = p.getTotalLength();
+    p.style.strokeDasharray = len;
+    WIRES.push({ p, dot, len, cp: { x0:HUBX, y0:HUBY, cx:mx, cy:my, x1:x, y1:y } });
+  });
+})();
+function qBezier(cp, u) {
+  const a = (1-u)*(1-u), b = 2*u*(1-u), c = u*u;
+  return { x: a*cp.x0 + b*cp.cx + c*cp.x1, y: a*cp.y0 + b*cp.cy + c*cp.y1 };
+}
+
+/* ============================ CURSEUR ============================ */
+/* Waypoints : {t: temps d'arrivée, target|x/y, dx/dy offset} — le curseur
+   voyage entre l'arrivée précédente et celle-ci (ease in-out). */
+let CURSOR_PATH = [];
+let CLICKS = [];
+const HOT = { x: 16, y: 5 }; // hotspot pointe (viewBox 32, affiché 56px → *1.75)
+function targetPoint(sel, fx = .5, fy = .5, dx = 0, dy = 0) {
+  const el = document.querySelector(sel);
+  const r = el.getBoundingClientRect();
+  return { x: r.left + r.width * fx + dx, y: r.top + r.height * fy + dy };
+}
+function resolveCursor() {
+  // ----- S1 EXCEL — mesurer grid1 SEUL (grid0 caché pour ne pas décaler) -----
+  $("s1grid0").style.display = "none";
+  $("s1grid1").style.display = "grid";
+  const tab1 = targetPoint("#s1tab1");
+  const errCell = targetPoint("#s1grid1 .c.err", .5, .5);
+  const rowNum = (() => { // ligne ACT-C06 (index 5)
+    const cells = document.querySelectorAll("#s1grid1 .c.rownum");
+    const r = cells[5].getBoundingClientRect();
+    return { x: r.left + r.width/2, y: r.top + r.height/2 };
+  })();
+  // ghost line : rect de la rangée supprimée, relatif à la fenêtre
+  (() => {
+    const winR = $("s1win").getBoundingClientRect();
+    const cells = Array.from(document.querySelectorAll('#s1grid1 .c')).filter(c => c.dataset.row == 5);
+    const first = cells[0].getBoundingClientRect(), last = cells[cells.length-1].getBoundingClientRect();
+    const g = $("s1ghost");
+    g.style.left = (first.left - winR.left) + "px";
+    g.style.top = (first.top - winR.top) + "px";
+    g.style.width = (last.right - first.left) + "px";
+    g.style.height = first.height + "px";
+  })();
+  $("s1grid0").style.display = "grid";
+  $("s1grid1").style.display = "none";
+  // ----- S3 APP — drawer mesuré en position OUVERTE -----
+  $("s3drawer").style.transform = "translateX(0px)";
+  const navPlans = targetPoint("#s3navPlans", .4, .5);
+  const rowCRM   = targetPoint("#s3rowCRM", .3, .5);
+  const rowAct   = targetPoint("#s3rowAct", .35, .5);
+  const btnClose = targetPoint("#s3btnClose", .5, .5);
+  const bell     = targetPoint("#s3bell", .5, .5);
+  const btnExp   = targetPoint("#s3exp", .5, .5);
+  $("s3drawer").style.transform = "translateX(600px)";
+
+  CURSOR_PATH = [
+    // — S1
+    { t: 6300,  x: 1980, y: 620 },              // entre par la droite
+    { t: 7300,  ...tab1 }, { t: 7900, ...tab1 },  // onglet copie (clic 7600)
+    { t: 9200,  ...errCell }, { t: 9900, ...errCell },
+    { t: 11200, ...rowNum }, { t: 11900, ...rowNum },  // clic 11500 (sélection ligne)
+    { t: 13900, x: rowNum.x + 60, y: rowNum.y + 40 },
+    { t: 14600, x: 700, y: 1180 },               // sort par le bas
+    // — S3
+    { t: 30800, x: 1980, y: 760 },               // entre par la droite
+    { t: 32100, ...navPlans }, { t: 32900, ...navPlans },   // clic 32500
+    { t: 34100, ...rowCRM }, { t: 34900, ...rowCRM },       // clic 34600
+    { t: 37900, ...rowAct }, { t: 38900, ...rowAct },       // clic 38600
+    { t: 40500, ...btnClose }, { t: 41400, ...btnClose },   // clic 41100
+    { t: 44700, ...bell }, { t: 45400, ...bell },           // clic 45100
+    { t: 48600, ...btnExp }, { t: 49600, ...btnExp },       // clic 49300
+    { t: 50600, x: 1980, y: 300 },               // sort
+  ];
+  CLICKS = [
+    { t: 7600,  dark: false }, { t: 11500, dark: false },
+    { t: 32500, dark: true },  { t: 34600, dark: true }, { t: 38600, dark: true },
+    { t: 41100, dark: true },  { t: 45100, dark: true }, { t: 49300, dark: true },
+  ];
+}
+function cursorAt(t) {
+  const P = CURSOR_PATH;
+  if (!P.length || t < P[0].t - 400 || t > P[P.length-1].t + 600) return null;
+  if (t <= P[0].t) return { x: P[0].x, y: P[0].y };
+  for (let i = 0; i < P.length - 1; i++) {
+    if (t >= P[i].t && t <= P[i+1].t) {
+      const p = easeIO(win(t, P[i].t, P[i+1].t));
+      // micro-arc : léger décalage perpendiculaire au milieu du trajet
+      const mx = lerp(P[i].x, P[i+1].x, p), my = lerp(P[i].y, P[i+1].y, p);
+      const dist = Math.hypot(P[i+1].x - P[i].x, P[i+1].y - P[i].y);
+      const arc = Math.sin(p * Math.PI) * Math.min(26, dist * .06);
+      const ang = Math.atan2(P[i+1].y - P[i].y, P[i+1].x - P[i].x) + Math.PI/2;
+      return { x: mx + Math.cos(ang) * arc, y: my + Math.sin(ang) * arc };
+    }
+  }
+  return { x: P[P.length-1].x, y: P[P.length-1].y };
+}
+// visibilité du curseur (fenêtres S1 & S3)
+function cursorOpacity(t) {
+  const w1 = Math.min(win(t, 6300, 6700), 1 - win(t, 14000, 14600));
+  const w2 = Math.min(win(t, 30800, 31200), 1 - win(t, 50000, 50600));
+  return Math.max(clamp01(w1), clamp01(w2));
+}
+
+/* ============================ SCÈNES ============================ */
+function sIntro(t) {
+  const el = $("s0"), o = sceneFade(t, SC.s0.a, SC.s0.b, 400, 500);
+  setOp(el, o); if (!o) return;
+  pop($("s0logo"), t, 300, 800);
+  reveal($("s0pres"), t, 1100, 500, 18);
+  reveal($("s0title"), t, 1600, 700, 30);
+  reveal($("s0sub"), t, 2400, 600, 22);
+  const hp = win(t, 0, 5000);
+  $("s0halo").style.transform = `translate(-50%,-50%) scale(${lerp(.85, 1.05, hp)})`;
+}
+
+function sExcel(t) {
+  const el = $("s1"), o = sceneFade(t, SC.s1.a, SC.s1.b, 500, 600);
+  setOp(el, o); if (!o) return;
+
+  // entrée de la fenêtre + Ken Burns léger
+  const ein = easeO(win(t, 5600, 6400));
+  const kb = lerp(1, 1.012, win(t, 5600, 23400));
+  // zoom caméra vers barre de titre (14600→15500), tenir, dézoom (17700→18600)
+  const zi = easeIO(win(t, 14600, 15500)), zo = easeIO(win(t, 17700, 18600));
+  const zoom = lerp(lerp(1, 1.24, zi), 1, zo);
+  $("s1cam").style.transform = `translateY(${(1-ein)*40}px) scale(${kb * zoom})`;
+  $("s1cam").style.transformOrigin = "42% 9%";
+  setOp($("s1win"), ein);
+
+  // onglet actif + grille visible
+  const onTab2 = t >= 7600;
+  $("s1tab0").classList.toggle("active", !onTab2);
+  $("s1tab1").classList.toggle("active", onTab2);
+  $("s1grid0").style.display = onTab2 ? "none" : "grid";
+  $("s1grid1").style.display = onTab2 ? "grid" : "none";
+
+  // cellules erreur qui clignotent (période 900ms) après 8300
+  const blink = t > 8300 && Math.floor((t - 8300) / 900) % 2 === 0;
+  document.querySelectorAll("#s1grid1 .c.err").forEach(c => {
+    c.style.background = blink ? "#f8c9d0" : "";
+    });
+
+  // sélection ligne ACT-C06 (index 5) à 11500, suppression 12400
+  const selected = t >= 11500 && t < 12400;
+  const delP = easeIO(win(t, 12400, 12900));
+  G1_CELLS.forEach(c => {
+    const isRow = c.dataset.row == 5 || (c.classList.contains("rownum") && c.textContent == "7");
+    if (!isRow) return;
+    c.style.boxShadow = selected ? "inset 0 0 0 200px rgba(46,91,232,.16)" : "";
+    if (!c.classList.contains("rownum")) c.style.opacity = 1 - delP;
+  });
+  // emplacement fantôme (contour pointillé) après suppression
+  setOp($("s1ghost"), easeO(win(t, 12950, 13400)) * (1 - win(t, 18900, 19400)));
+
+  // fichiers fantômes (pendant le zoom)
+  const files = $("s1files").children;
+  for (let i = 0; i < files.length; i++) {
+    const p = easeO(win(t, 15300 + i*260, 15800 + i*260)) * (1 - win(t, 17600, 18000));
+    setOp(files[i], p); setT(files[i], 0, (1-p) * 18, undefined, (i-1) * 1.6);
+  }
+
+  // cartons
+  callout($("s1c1"), t, 9200, 11600);
+  callout($("s1c2"), t, 13100, 15200);
+  callout($("s1c3"), t, 16100, 18300);
+
+  // fin de scène : assombrir + panneau douleurs
+  const sh = win(t, 18900, 19600);
+  setOp($("s1shade"), sh * .55);
+  $("s1win").style.filter = `grayscale(${sh}) brightness(${1 - sh*.15})`;
+  const pp = easeO(win(t, 19100, 19800));
+  setOp($("s1pp"), pp); setT($("s1pp"), (1-pp) * 60, 0);
+  const items = document.querySelectorAll("#s1pp .pp-item");
+  items.forEach((it, i) => reveal(it, t, 19700 + i*450, 500, 16));
+}
+
+function sDeclic(t) {
+  const el = $("s2"), o = sceneFade(t, SC.s2.a, SC.s2.b, 500, 600);
+  setOp(el, o); if (!o) return;
+  reveal($("s2bar"), t, 24300, 400, 10);
+  reveal($("s2l1"), t, 24600, 650, 26);
+  reveal($("s2l2"), t, 25600, 650, 26);
+}
+
+const S3STEPS = { dash: [28500, 32500], plans: [32500, 34600], detail: [34600, 51300] };
+function sApp(t) {
+  const el = $("s3"), o = sceneFade(t, SC.s3.a, SC.s3.b, 500, 700);
+  setOp(el, o); if (!o) return;
+
+  // entrée app
+  const ein = easeO(win(t, 28700, 29500));
+  $("s3app").style.transform = `scale(${lerp(.97, 1, ein)}) translateY(${(1-ein)*24}px)`;
+  setOp($("s3app"), ein);
+
+  // vues selon t
+  const inDash = t < 32500, inPlans = t >= 32500 && t < 34600, inDetail = t >= 34600;
+  setOp($("s3vDash"), inDash ? 1 : 0);
+  setOp($("s3vPlans"), inPlans ? easeO(win(t, 32500, 32850)) : 0);
+  setOp($("s3vDetail"), inDetail ? easeO(win(t, 34600, 34950)) : 0);
+  $("s3navDash").classList.toggle("on", inDash);
+  $("s3navPlans").classList.toggle("on", !inDash);
+  $("s3title").textContent = inDash ? "Tableau de bord" : "Plans d'actions";
+  $("s3sub").textContent = inDash ? "Vue d'ensemble de vos plans d'actions"
+                : inPlans ? "7 plans · 3 en cours · 1 en retard"
+                : "Détail du plan · 7 actions · Julie Moreau";
+
+  // dashboard : KPIs + chart + charges
+  if (inDash) {
+    const kp = easeO(win(t, 29300, 30600));
+    $("k1").textContent = Math.round(7 * kp);
+    $("k2").textContent = Math.round(58 * kp);
+    $("k3").textContent = Math.round(92 * kp);
+    $("k4").textContent = Math.round(3 * kp);
+    const cp = easeIO(win(t, 29700, 31200));
+    $("s3line").style.strokeDashoffset = window.__chartLen * (1 - cp);
+    setOp($("s3area"), cp);
+    const lp = easeO(win(t, 29900, 31100));
+    document.querySelectorAll("#s3vDash .loadbar").forEach(b => { b.style.width = (b.dataset.w * lp) + "%"; });
+  }
+
+  // clôture de l'action : badge, %, progress
+  const closed = t >= 41250;
+  const badge = $("s3actBadge");
+  if (closed) { badge.className = "badge b-done"; badge.innerHTML = '<span class="d"></span>Terminé'; }
+  else { badge.className = "badge b-late"; badge.innerHTML = '<span class="d"></span>En retard'; }
+  const prog = easeO(win(t, 41250, 42050));
+  $("s3actPct").textContent = closed ? "100%" : "35%";
+  $("s3dPct").textContent = closed ? "100%" : "35%";
+  $("s3ppct").textContent = Math.round(lerp(30, 43, prog)) + "%";
+  const pb = $("s3pbar");
+  pb.style.width = lerp(30, 43, prog) + "%";
+  pb.style.background = closed ? "#f59e0b" : "#ef4444";
+
+  // drawer action (38800 in, 41500 out)
+  const din = easeIO(win(t, 38800, 39300)), dout = easeIO(win(t, 41500, 42000));
+  $("s3drawer").style.transform = `translateX(${lerp(600, 0, din) + dout * 600}px)`;
+
+  // toast clôture (41400→44200) puis toast export (49500→51200)
+  const toast = $("s3toast"), tt = $("s3toastTxt");
+  let toastP = 0;
+  if (t >= 41400 && t < 44200) { tt.textContent = "Action clôturée — revue d'efficacité demandée"; toastP = Math.min(easeO(win(t,41400,41750)), 1 - win(t,43800,44200)); }
+  else if (t >= 49500) { tt.textContent = "Rapport PDF généré — plan_crm_2026.pdf"; toastP = Math.min(easeO(win(t,49500,49850)), 1 - win(t,50900,51300)); }
+  setOp(toast, toastP); setT(toast, 0, (1-toastP)*16);
+
+  // badge cloche pulse avant clic (44300→45100)
+  const bdg = $("s3bdg");
+  const pulse = t >= 44300 && t < 45100 ? 1 + .18 * Math.sin((t - 44300)/130) : 1;
+  bdg.style.transform = `scale(${pulse})`;
+  bdg.textContent = t >= 41250 ? "4" : "3";
+
+  // notif drawer (45100 in, 48500 out)
+  const nin = easeIO(win(t, 45150, 45600)), nout = easeIO(win(t, 48200, 48650));
+  const nd = $("s3nd");
+  setOp(nd, nin * (1 - nout));
+  nd.style.transform = `translateY(${lerp(-30, 0, nin)}px)`;
+  document.querySelectorAll("#s3nd .n-item").forEach((it, i) => {
+    if (nin > 0 && nout < 1) reveal(it, t, 45450 + i*260, 420, 14); else setOp(it, 0);
+  });
+
+  // cartons verts
+  callout($("s3c1"), t, 36200, 38300);
+  callout($("s3c2"), t, 42300, 44200);
+  callout($("s3c3"), t, 46200, 48200);
+  callout($("s3c4"), t, 49800, 51100);
+}
+
+function sHub(t) {
+  const el = $("s4"), o = sceneFade(t, SC.s4.a, SC.s4.b, 500, 700);
+  setOp(el, o); if (!o) return;
+  reveal($("s4eb"), t, 52300, 500, 16);
+  reveal($("s4h2"), t, 52600, 650, 26);
+  const hp = win(t, 53100, 53650);
+  $("s4hub").style.transform = `translate(-50%,-50%) scale(${lerp(.75, 1, easeOB(hp))})`;
+  setOp($("s4hub"), easeO(hp));
+
+  NODES.forEach((n, i) => {
+    const p = win(t, 53700 + i*220, 54250 + i*220);
+    setOp(n, easeO(p));
+    n.style.transform = `translate(-50%,-50%) scale(${lerp(.8, 1, easeOB(p))})`;
+  });
+  WIRES.forEach((w, i) => {
+    const p = easeIO(win(t, 54000 + i*220, 54900 + i*220));
+    w.p.style.strokeDashoffset = w.len * (1 - p);
+    // pulses après tracé : chaque câble, un dot fait des allers-retours
+    if (t > 55400 + i*220) {
+      const cyc = ((t - 55400 - i*220) / 1600) % 2;         // 0..2
+      const u = cyc < 1 ? cyc : 2 - cyc;                     // ping-pong
+      const pt = qBezier(w.cp, u);
+      w.dot.setAttribute("cx", pt.x); w.dot.setAttribute("cy", pt.y);
+      w.dot.setAttribute("opacity", .85);
+    } else w.dot.setAttribute("opacity", 0);
+  });
+  const cp = easeO(win(t, 57000, 57600));
+  setOp($("s4cap"), cp);
+  $("s4cap").style.transform = `translateX(-50%) translateY(${(1-cp)*20}px)`;
+}
+
+function sCompare(t) {
+  const el = $("s5"), o = sceneFade(t, SC.s5.a, SC.s5.b, 500, 700);
+  setOp(el, o); if (!o) return;
+  const rows = document.querySelectorAll("#s5 .trow");
+  rows.forEach((r, i) => reveal(r, t, 61900 + i*550, 520, 20));
+}
+
+function sOutro(t) {
+  const el = $("s6"), o = sceneFade(t, SC.s6.a, SC.s6.b, 600, 1);  // pas de fondu de sortie (fin de film)
+  setOp(el, t >= SC.s6.a ? Math.min(win(t, SC.s6.a, SC.s6.a + 600), 1) : 0);
+  if (t < SC.s6.a) return;
+  pop($("s6logo"), t, 69400, 700);
+  reveal($("s6h1"), t, 70000, 600, 24);
+  reveal($("s6tag"), t, 70600, 600, 20);
+  const cp = easeO(win(t, 71400, 72000));
+  setOp($("s6cta"), cp); $("s6cta").style.transform = `translateY(${(1-cp)*26}px) scale(${lerp(.94,1,cp)})`;
+  $("s6halo").style.transform = `translate(-50%,-50%) scale(${1 + .05 * Math.sin((t-69000)/900)})`;
+}
+
+/* ============================ CURSEUR + RIPPLE ============================ */
+function drawCursor(t) {
+  const c = $("cursor"), pos = cursorAt(t), op = cursorOpacity(t);
+  if (!pos || op <= 0) { setOp(c, 0); return; }
+  // squash au clic
+  let s = 1;
+  for (const k of CLICKS) {
+    if (t >= k.t - 90 && t <= k.t + 160) {
+      const p = win(t, k.t - 90, k.t + 160);
+      s = 1 - .14 * Math.sin(p * Math.PI);
+    }
+  }
+  setOp(c, op);
+  c.style.transform = `translate(${pos.x - HOT.x*1.75}px, ${pos.y - HOT.y*1.75}px) scale(${s})`;
+  // ripple
+  const r = $("ripple");
+  let rp = null;
+  for (const k of CLICKS) if (t >= k.t && t <= k.t + 560) rp = k;
+  if (rp) {
+    const p = win(t, rp.t, rp.t + 560);
+    const size = lerp(16, 110, easeO(p));
+    r.style.width = r.style.height = size + "px";
+    r.style.left = pos.x + "px"; r.style.top = pos.y + "px";
+    r.style.opacity = (1 - p) * .9;
+    r.className = "ripple" + (rp.dark ? " dark" : "");
+    r.style.borderWidth = lerp(5, 2, p) + "px";
+  } else setOp(r, 0);
+}
+
+/* ============================ SEEK ============================ */
+window.seek = function (t) {
+  sIntro(t); sExcel(t); sDeclic(t); sApp(t); sHub(t); sCompare(t); sOutro(t);
+  drawCursor(t);
+};
+
+/* ============================ BOOT ============================ */
+window.__ready = false;
+(async function boot() {
+  try { await document.fonts.ready; } catch (e) {}
+  // mesurer les cibles APRÈS fontes chargées (les vues app restent mesurables :
+  // opacité pilotée, jamais display:none)
+  document.querySelectorAll("#s3 .view").forEach(v => v.style.opacity = 0);
+  resolveCursor();
+  window.seek(0);
+  window.__ready = true;
+})();
+</script>
+</body>
+</html>

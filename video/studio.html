@@ -38,6 +38,14 @@
             transform:translate(-50%,-50%); opacity:0; pointer-events:none; }
   .ripple.dark { border-color:rgba(107,165,247,.9); }
 
+  /* ---------- Sous-titres ---------- */
+  .subtitle {
+    position:absolute; left:50%; bottom:54px; transform:translateX(-50%); z-index:850;
+    font-size:27px; font-weight:500; letter-spacing:.012em; color:#fff; text-align:center;
+    background:rgba(13,20,36,.58); padding:13px 32px; border-radius:100px;
+    white-space:nowrap; opacity:0;
+  }
+
   /* ---------- Cartons (callouts) ---------- */
   .callout { position:absolute; z-index:800; display:flex; align-items:center; gap:18px;
              background:#fff; border:1px solid var(--light); border-radius:14px;
@@ -553,6 +561,9 @@
     </div>
   </section>
 
+  <!-- ============ SOUS-TITRE ============ -->
+  <div class="subtitle" id="subtitle"></div>
+
   <!-- ============ CURSEUR ============ -->
   <div id="cursor">
     <svg viewBox="0 0 32 32" width="56" height="56">
@@ -1046,9 +1057,27 @@ function drawCursor(t) {
   } else setOp(r, 0);
 }
 
+/* ============================ SOUS-TITRES ============================ */
+const SUBS = [
+  { a: 6900,  b: 10600, text: "Vos plans d'actions, version tableur." },
+  { a: 29300, b: 32100, text: "La même équipe, avec le bon outil." },
+  { a: 64900, b: 67600, text: "Le choix est vite fait." },
+];
+function drawSubtitle(t) {
+  const el = $("subtitle");
+  let active = null;
+  for (const s of SUBS) if (t >= s.a && t <= s.b + 350) { active = s; break; }
+  if (!active) { setOp(el, 0); return; }
+  el.textContent = active.text;
+  const p = Math.min(easeO(win(t, active.a, active.a + 450)), 1 - win(t, active.b, active.b + 350));
+  setOp(el, p);
+  el.style.transform = `translateX(-50%) translateY(${(1 - Math.min(p * 1.4, 1)) * 14}px)`;
+}
+
 /* ============================ SEEK ============================ */
 window.seek = function (t) {
   sIntro(t); sExcel(t); sDeclic(t); sApp(t); sHub(t); sCompare(t); sOutro(t);
+  drawSubtitle(t);
   drawCursor(t);
 };
 
